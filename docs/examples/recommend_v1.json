@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    {
+      "location": {
+        "id": 1,
+        "name": "Mount Rainier",
+        "lat": 46.8523,
+        "lon": -121.7603,
+        "elevation": 4392.0,
+        "category": "Mountain",
+        "state": "WA",
+        "timezone": "America/Los_Angeles"
+      },
+      "score": 87.5,
+      "best_window": {
+        "time": "2025-08-12T14:00",
+        "temperature_2m": 19.5,
+        "cloudcover": 10.0,
+        "precipitation_probability": 0.0
+      }
+    }
+  ],
+  "etag": "abc123etag"
+}
