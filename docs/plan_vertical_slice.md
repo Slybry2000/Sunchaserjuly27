@@ -25,8 +25,21 @@
 
 ### 0.2 What's IN PROGRESS / NEXT
 
-* 🟡 Phase B frontend: Flutter integration with typed Dart client + ETag/304 support
-* 🟡 Phase B completion: 304 conditional responses, dataset expansion (≥100 rows+categories) Plan ("disgustingly thorough")
+Actionable next steps (short term):
+
+* Sprint 1 — Forecast Data Engine (in progress): a fetch job and snapshot writer were added on branch `sprint-1-data-engine` (`Backend/scripts/fetch_forecasts.py`). Next: persist snapshots to a datastore (Firestore or SQLite) or expose via a lightweight API for the frontend to consume.
+* Implement conditional requests (`If-None-Match` → `304`) in `routers/recommend.py` and add tests for invariance and 304 behavior (Phase B completion).
+* Dataset expansion: grow `data/pnw.csv` to ≥100 rows and add `category` column; run `scripts/validate_dataset.py` and add tests for expanded schema.
+* Cache unification & stability: reconcile `utils/cache.py` and `utils/cache_inproc.py` into a single public cache API; fix background refresh deadlock and re-enable the 4 skipped cache tests.
+* Frontend work (parallel): implement typed Dart models, `ApiClient.recommend(...)`, and ETag revalidation UI flow (see Issue #3 for the UI MVP).
+* CI & tests: keep flaky cache tests skipped on CI until cache refresh is made deterministic; add a follow-up issue to re-enable them and track progress.
+
+Short status (delta):
+
+* ✅ Branch `sprint-1-data-engine` created with a basic fetch script and unit test. Test for parsing/score passed locally.
+* ✅ Issues for Sprints 0–2 created and assigned; milestone `MVP` created.
+
+Next immediate action: persist forecast snapshots (Firestore/SQLite) or add a tiny API endpoint to serve `data/forecast_snapshot.json` for frontend consumption — tell me which persistence option you prefer and I'll implement it.
 
 **Audience:** Backend · Mobile · DevOps
 **Owner:** (assign)
