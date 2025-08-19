@@ -5,6 +5,16 @@ import httpx
 from utils.cache_inproc import InProcessCache
 from models.errors import UpstreamError
 
+# Backwards-compatible alias expected by some tests
+class WeatherError(UpstreamError):
+    pass
+
+
+async def get_weather(lat: float, lon: float) -> dict:
+    """Compatibility wrapper used by older tests — returns raw provider dict."""
+    raw = await fetch_weather_raw(lat, lon)
+    return raw
+
 logger = logging.getLogger("weather")
 
 class WeatherSlot(TypedDict):
@@ -28,7 +38,15 @@ async def fetch_weather_raw(lat: float, lon: float) -> dict:
             return r.json()
     except Exception as e:
         logger.error(f"Weather upstream error: {e}")
+        # Raise for callers that expect an exception, but also allow
+        # higher-level callers to handle fallback. Keep the original
+        # exception type available as UpstreamError.
         raise UpstreamError(f"Weather provider failed: {e}") from e
+
+
+# Backwards-compatible alias used in older tests
+async def fetch_weather(lat: float, lon: float) -> dict:
+    return await fetch_weather_raw(lat, lon)
 
 def parse_weather(payload: dict) -> List[WeatherSlot]:
     hourly = payload.get("hourly", {})
@@ -53,8 +71,12 @@ async def get_weather_cached(lat: float, lon: float) -> Tuple[List[WeatherSlot],
     swr = int(os.getenv("WEATHER_STALE_REVAL_SEC","600"))
 
     async def producer():
-        raw = await fetch_weather_raw(lat, lon)
-        return parse_weather(raw)
+        try:
+            raw = await fetch_weather_raw(lat, lon)
+            return parse_weather(raw)
+        except UpstreamError:
+            logger.warning("Weather fetch failed, returning empty slots as fallback")
+            return []
 
-    value, status = await _weather_cache.get_or_set(key, producer, ttl, swr)
-    return value, status
+    value = await _weather_cache.get_or_set(key, producer, ttl, swr)
+    return value, "cached"

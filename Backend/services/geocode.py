@@ -4,11 +4,7 @@ Geocoding service using Mapbox API
 import os
 
 import httpx
-
-
-class LocationNotFound(Exception):
-    """Raised when geocoding fails to find a location"""
-    pass
+from models.errors import LocationNotFound
 
 
 async def geocode(query: str) -> tuple[float, float]:

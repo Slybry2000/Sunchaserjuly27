@@ -110,8 +110,10 @@ class InProcessCache:
 
     async def set(self, key: str, value: Any, ttl: Optional[int] = None, swr: Optional[int] = None) -> None:
         """Set value in cache"""
-        ttl = ttl or self.default_ttl
-        swr = swr or self.default_swr
+        if ttl is None:
+            ttl = self.default_ttl
+        if swr is None:
+            swr = self.default_swr
         
         entry = CacheEntry(
             value=value,
@@ -135,30 +137,47 @@ class InProcessCache:
         factory: Callable[[], Any],
         ttl: Optional[int] = None,
         swr: Optional[int] = None
-    ) -> tuple[Any, str]:
+    ) -> Any:
         """
-        Get value from cache or set it using factory function
-        Returns (value, status):
-          status in {"miss", "hit_fresh", "hit_stale"}
+        Get value from cache or compute it using factory and cache it.
+        Returns the cached/computed value.
         """
+        if ttl is None:
+            ttl = self.default_ttl
+        if swr is None:
+            swr = self.default_swr
+
+        should_refresh = False
+        value_to_return: Optional[Any] = None
+
         with self._lock:
             self._evict_expired()
             entry = self._cache.get(key)
-            if entry:
+            if entry is not None:
                 self._update_access_order(key)
                 if entry.is_fresh:
-                    return entry.value, "hit_fresh"
-                elif entry.is_stale_but_revalidatable:
+                    return entry.value
+                if entry.is_stale_but_revalidatable:
+                    value_to_return = entry.value
                     if key not in self._refresh_tasks:
-                        logger.debug(f"Starting background refresh for: {key}")
-                        task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
-                        self._refresh_tasks[key] = task
-                    return entry.value, "hit_stale"
+                        should_refresh = True
                 else:
+                    # Too old, evict and fall through to fetch
                     self._remove_key(key)
-        # Not in cache or too old, fetch now
+
+        # Start background refresh outside the lock
+        if should_refresh:
+            logger.debug(f"Starting background refresh for: {key}")
+            task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
+            self._refresh_tasks[key] = task
+            return value_to_return
+
+        if value_to_return is not None:
+            return value_to_return
+
+        # Not in cache or was evicted: fetch now
         value = await self._fetch_and_cache(key, factory, ttl, swr)
-        return value, "miss"
+        return value
 
     async def _fetch_and_cache(
         self,
@@ -232,8 +251,9 @@ class InProcessCache:
         """Get cache statistics"""
         with self._lock:
             total_entries = len(self._cache)
-            fresh_entries = sum(1 for entry in self._cache.values() if entry.is_fresh)
-            stale_entries = sum(1 for entry in self._cache.values() if entry.is_stale_but_revalidatable)
+            now = time.time()
+            fresh_entries = sum(1 for entry in self._cache.values() if not (now - entry.created_at >= entry.ttl_seconds))
+            stale_entries = sum(1 for entry in self._cache.values() if entry.ttl_seconds <= (now - entry.created_at) < (entry.ttl_seconds + entry.swr_seconds))
             
             return {
                 "total_entries": total_entries,

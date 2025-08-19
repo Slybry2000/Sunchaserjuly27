@@ -12,6 +12,17 @@ class Recommendation(BaseModel):
     duration_hours: int = 0
     score: float
 
+
+class Location(BaseModel):
+    id: int
+    name: str
+    lat: float
+    lon: float
+    elevation: float
+    category: str
+    state: str
+    timezone: str
+
 class RecommendResponse(BaseModel):
     query: dict
     results: List[Recommendation]
