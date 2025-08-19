@@ -5,7 +5,7 @@ import pytest
 
 from services.weather import parse_weather
 
-FIXTURE_DIR = Path(__file__).resolve().parents[1] / 'fixtures'
+FIXTURE_DIR = Path(__file__).resolve().parent / 'fixtures'
 FIXTURE = FIXTURE_DIR / 'open_meteo_hourly.json'
 
 @pytest.mark.asyncio
