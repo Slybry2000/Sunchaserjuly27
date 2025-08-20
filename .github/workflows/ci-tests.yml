@@ -14,12 +14,25 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies (runtime + dev/test)
         run: |
+          # Install runtime requirements if present
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
-          elif [ -f requirements-dev.txt ]; then
+          fi
+          # Install dev/test requirements if present
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+          # Fail if neither requirements file exists
+          if [ ! -f requirements.txt ] && [ ! -f requirements-dev.txt ]; then
+            echo "No requirements file found (requirements.txt or requirements-dev.txt)" && exit 1
+          fi
+      - name: Install dev/test deps
+        run: |
+          # Ensure pytest and related dev/test tools are available for subsequent steps
+          if [ -f requirements-dev.txt ]; then
             pip install -r requirements-dev.txt
           else
-            echo "No requirements file found (requirements.txt or requirements-dev.txt)" && exit 1
+            echo "No requirements-dev.txt found; continuing (pytest may be unavailable)"
           fi
       - name: Run ETag invariance quick checks
         run: |
