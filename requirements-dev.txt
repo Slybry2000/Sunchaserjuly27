@@ -13,7 +13,7 @@ mypy==1.6.1
 # NOTE: upgraded pytest and pytest-httpx to a coordinated set that allows
 # pinning httpx/httpcore/h11 for pip-audit remediation without resolver conflicts.
 pytest==8.4.1
-pytest-asyncio==0.21.2
+pytest-asyncio==1.1.0
 pytest-cov==4.1.0
 pytest-httpx==0.35.0
 httpx==0.28.1
