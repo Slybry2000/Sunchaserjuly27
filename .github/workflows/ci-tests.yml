@@ -12,8 +12,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Install dependencies (runtime + dev/test)
+        run: |
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
       - name: Run ETag invariance quick checks
         run: |
           pytest Backend/tests/test_etag_invariance.py Backend/tests/test_etag_roundtrip.py -q
