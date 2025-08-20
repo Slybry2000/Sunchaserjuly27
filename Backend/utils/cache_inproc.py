@@ -169,13 +169,21 @@ class InProcessCache:
         # Start background refresh outside the lock
         if should_refresh:
             logger.debug(f"Starting background refresh for: {key}")
+            # Reserve the refresh slot to prevent races with other callers.
+            # Use a task for single-flight semantics so other coroutines
+            # can await the same task whether we run inline or not.
+            task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
+            self._refresh_tasks[key] = task
             if SYNC_REFRESH:
-                # Run refresh inline for deterministic tests
-                await self._background_refresh(key, factory, ttl, swr)
+                # In test mode, wait for the refresh to finish before returning
+                try:
+                    await task
+                except Exception:
+                    # Let callers continue; background refresh failures are logged
+                    pass
                 return value_to_return
             else:
-                task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
-                self._refresh_tasks[key] = task
+                # Fire-and-forget for normal operation
                 return value_to_return
 
         if value_to_return is not None:
@@ -218,13 +226,15 @@ class InProcessCache:
                 # Clean up refresh task
                 self._refresh_tasks.pop(key, None)
 
-        # If synchronous-refresh is requested for tests, run inline to keep behavior deterministic
+        # If synchronous-refresh is requested for tests, create and store a task
+        # so concurrent callers will await the same work (single-flight).
         if SYNC_REFRESH:
+            task = asyncio.create_task(fetch_task())
+            self._refresh_tasks[key] = task
             try:
-                result = await fetch_task()
-                return result
+                return await task
             finally:
-                # ensure cleanup
+                # ensure cleanup if not already removed
                 self._refresh_tasks.pop(key, None)
 
         # Store task for single-flight
