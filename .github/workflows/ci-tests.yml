@@ -14,6 +14,10 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies
         run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run ETag invariance quick checks
+        run: |
+          pytest Backend/tests/test_etag_invariance.py Backend/tests/test_etag_roundtrip.py -q
+        # Fail fast if ETag regressions introduced
       - name: Run tests with coverage
         run: pytest --cov=Backend --cov-report=xml:coverage.xml -q
       - name: Upload coverage to Codecov

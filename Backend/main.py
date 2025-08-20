@@ -78,3 +78,4 @@ async def geocode_endpoint(q: str = Query(..., description="Location query (e.g.
         raise
     except ValueError as e:
         raise SchemaError(str(e)) from e
+    

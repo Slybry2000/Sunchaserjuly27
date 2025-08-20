@@ -5,7 +5,7 @@ import sqlite3
 from typing import List, Dict, Optional
 
 from utils.geo import haversine_miles
-from utils.etag import strong_etag
+from utils.etag import strong_etag, strong_etag_for_obj
 
 router = APIRouter()
 
@@ -78,8 +78,8 @@ async def public_forecasts(
 
     payload = {'source': 'sqlite' if OUT_DB.exists() else 'json', 'count': len(filtered), 'items': filtered}
     # Compute ETag from canonical JSON (stable ordering)
-    payload_bytes = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode('utf-8')
-    etag = strong_etag(payload_bytes)
+    # Use object-level canonicalization for consistent ETag generation
+    etag = strong_etag_for_obj(payload)
 
     # Honor If-None-Match
     if if_none_match is not None and if_none_match == etag:

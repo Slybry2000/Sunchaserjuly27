@@ -159,6 +159,18 @@ pytest tests/test_recommend_api.py -v
 - ✅ Scoring engine and location filtering
 - 🚫 4 tests skipped due to asyncio deadlock edge cases (non-critical)
 
+### Developer note: deterministic cache refresh during tests
+
+To make cache background refresh deterministic in tests (mirroring CI), set:
+
+```powershell
+$env:CACHE_REFRESH_SYNC = 'true'
+pytest
+```
+
+The repository includes a `Backend/tests/conftest.py` fixture that automatically
+enables `CACHE_REFRESH_SYNC` for the test session so local runs behave like CI.
+
 ## 🏗️ Architecture
 
 ### Current Implementation (Phase B Backend Complete)
@@ -246,3 +258,17 @@ Phase B frontend work in progress:
 - Comprehensive frontend testing with CI
 
 For detailed technical specifications, see `docs/plan_vertical_slice.md`.
+
+## Attribution
+
+You can paste either of the following lines into the README, app footer, or UI:
+
+```
+Weather data provided by Open-Meteo (https://open-meteo.com)
+```
+
+Shorter footer-friendly option:
+
+```
+Weather data © Open-Meteo
+```

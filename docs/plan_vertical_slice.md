@@ -45,7 +45,18 @@ Short status (delta):
 * ✅ FastAPI lifespan migration complete: removed deprecated `@app.on_event` hooks; shared HTTP client is now initialized/cleaned up via lifespan (no warnings in tests).
 * ✅ Error mapping tests added: `UpstreamError→502`, `LocationNotFound→404`, `TimeoutBudgetExceeded→504` all covered and passing.
 
-Next immediate action: continue Phase B by hardening cache refresh behavior, re-enabling the skipped cache tests, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
+Next immediate action: continue Phase B by hardening cache refresh behavior, tightening ETag canonicalization (completed), re-enabling the skipped cache tests, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
+
+Recent progress (delta):
+
+* ✅ Tightened ETag canonicalization: added `utils/etag.strong_etag_for_obj` and switched `/recommend` and `/forecasts` to use object-level canonicalization (stable float formatting and sorted keys) to reduce ETag churn and make invariance tests reliable.
+* ✅ Ran focused ETag/If-None-Match tests locally (3 passed).
+
+Next short steps:
+
+* Add a `pytest` fixture to set `CACHE_REFRESH_SYNC=true` for local deterministic cache tests and re-enable the four previously skipped cache tests.
+* Add a short note in `README.md` describing `CACHE_REFRESH_SYNC` and local test guidance.
+* Add/expand invariance tests for ETag (freeze generated timestamps and validate stable ETag for identical inputs).
 
 **Audience:** Backend · Mobile · DevOps
 **Owner:** (assign)
