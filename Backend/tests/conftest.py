@@ -2,6 +2,19 @@ import os
 import importlib
 import pytest
 
+# Explicitly import pytest_asyncio to guarantee the plugin is registered
+# in environments where pytest's plugin discovery may not run early enough.
+try:
+    import pytest_asyncio  # type: ignore
+except Exception:
+    # best-effort: if import fails, plugin may still be available via entrypoints
+    pass
+
+# Ensure pytest-asyncio plugin is loaded so plain `async def` tests are supported
+# across CI and local runs. This makes async tests run without requiring
+# explicit @pytest.mark.asyncio on every test.
+pytest_plugins = ["pytest_asyncio"]
+
 
 @pytest.fixture(scope="session", autouse=True)
 def enable_sync_cache_refresh():
