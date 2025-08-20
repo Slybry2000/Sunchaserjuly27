@@ -3,7 +3,8 @@
 # Pinned for deterministic CI runs. Review and update pins periodically.
 
 # Linting & formatting
-ruff==0.4.16
+# pinned to a known-available release for CI
+ruff==0.12.9
 
 # Static type checking
 mypy==1.6.1
