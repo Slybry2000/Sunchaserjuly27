@@ -1,12 +1,16 @@
 import asyncio
 import json
 import csv
+import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from services.weather import get_weather_cached, parse_weather
 
 DATA_DIR = Path(__file__).resolve().parents[1] / 'data'
 PNW_CSV = DATA_DIR / 'pnw.csv'
 OUT_JSON = DATA_DIR / 'forecast_snapshot.json'
+OUT_DB = DATA_DIR / 'forecast_snapshot.db'
+
 
 async def fetch_for_location(lat: float, lon: float):
     slots, status = await get_weather_cached(lat, lon)
@@ -23,6 +27,26 @@ async def fetch_for_location(lat: float, lon: float):
         'score': round(score, 3),
         'slots_count': len(slots),
     }
+
+
+def _init_db(path: Path):
+    conn = sqlite3.connect(str(path))
+    cur = conn.cursor()
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lat REAL NOT NULL,
+            lon REAL NOT NULL,
+            score REAL NOT NULL,
+            slots_count INTEGER NOT NULL,
+            generated_at TEXT NOT NULL
+        )
+        '''
+    )
+    conn.commit()
+    return conn
+
 
 async def main(limit=100):
     locs = []
@@ -50,11 +74,30 @@ async def main(limit=100):
         res = await coro
         results.append(res)
 
+    # ensure output directory exists
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+
+    # write JSON snapshot (same as before)
     with open(OUT_JSON, 'w', encoding='utf-8') as fh:
         json.dump(results, fh, indent=2)
 
-    print(f'Wrote {len(results)} snapshots to {OUT_JSON}')
+    # persist to SQLite for local/dev consumption
+    conn = _init_db(OUT_DB)
+    cur = conn.cursor()
+    # simple approach: delete previous run and insert fresh rows
+    cur.execute('DELETE FROM snapshots')
+    now = datetime.now(timezone.utc).isoformat()
+    rows = [(r['lat'], r['lon'], r['score'], r['slots_count'], now) for r in results]
+    if rows:
+        cur.executemany(
+            'INSERT INTO snapshots (lat, lon, score, slots_count, generated_at) VALUES (?, ?, ?, ?, ?)',
+            rows,
+        )
+    conn.commit()
+    conn.close()
+
+    print(f'Wrote {len(results)} snapshots to {OUT_JSON} and persisted to {OUT_DB}')
+
 
 if __name__ == '__main__':
     asyncio.run(main())

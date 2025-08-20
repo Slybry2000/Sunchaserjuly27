@@ -116,6 +116,8 @@ async def recommend(
     etag_payload = {k: v for k, v in payload.items() if k != "generated_at"}
     # ensure datetimes are serialized consistently
     body = json.dumps(etag_payload, default=str, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    # DEBUG: emit canonical payload used for ETag (temporary)
+    # end debug
     etag = strong_etag(body)
 
     # If-None-Match support

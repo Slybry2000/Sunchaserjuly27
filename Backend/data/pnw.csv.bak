@@ -1,0 +1,16 @@
+id,name,lat,lon,elevation,category,state,timezone
+1,Mount Rainier,46.8523,-121.7603,4392,Mountain,WA,America/Los_Angeles
+2,Crater Lake,42.9446,-122.1090,1883,Lake,OR,America/Los_Angeles
+3,Olympic National Park,47.8021,-123.6044,2424,Park,WA,America/Los_Angeles
+4,Mount St. Helens,46.1912,-122.1944,2549,Mountain,WA,America/Los_Angeles
+5,Smith Rock,44.3670,-121.1370,900,Climbing,OR,America/Los_Angeles
+6,Columbia River Gorge,45.7256,-121.7306,60,Gorge,OR,America/Los_Angeles
+7,North Cascades,48.7718,-121.2985,2800,Park,WA,America/Los_Angeles
+8,Mount Hood,45.3735,-121.6959,3426,Mountain,OR,America/Los_Angeles
+9,Deception Pass,48.4047,-122.6448,0,Park,WA,America/Los_Angeles
+10,Mount Bachelor,43.9790,-121.6880,2763,Mountain,OR,America/Los_Angeles
+11,Steens Mountain,42.6472,-118.5967,2970,Mountain,OR,America/Los_Angeles
+12,San Juan Islands,48.5366,-123.0908,0,Island,WA,America/Los_Angeles
+13,Mount Adams,46.2020,-121.4905,3743,Mountain,WA,America/Los_Angeles
+14,Three Sisters,44.1489,-121.7681,3157,Mountain,OR,America/Los_Angeles
+15,Mount Baker,48.7768,-121.8101,3286,Mountain,WA,America/Los_Angeles

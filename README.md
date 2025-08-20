@@ -53,6 +53,17 @@ uvicorn main:app --reload --port 8001
 uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
+### Seed forecast snapshot DB (local)
+Run the fetch job to write a JSON snapshot and persist a local SQLite DB used by the internal snapshot API.
+
+```powershell
+# Activate the virtual environment (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Run the fetch script (will write data/forecast_snapshot.json and data/forecast_snapshot.db)
+python Backend\scripts\fetch_forecasts.py
+```
+
 ### 4. Test the API
 ```bash
 # Health check

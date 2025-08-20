@@ -227,6 +227,7 @@ class InProcessCache:
     ) -> None:
         """Background refresh task"""
         try:
+            # Debug: indicate background refresh started
             logger.debug(f"Background refresh starting: {key}")
             if asyncio.iscoroutinefunction(factory):
                 value = await factory()
@@ -240,6 +241,53 @@ class InProcessCache:
         finally:
             # Clean up
             self._refresh_tasks.pop(key, None)
+
+    async def get_status(self, key: str) -> tuple[Optional[Any], str]:
+        """Return (value, status) for a key.
+
+        Status is one of: 'miss', 'hit_fresh', 'hit_stale'. This is a best-effort
+        helper used by the outer `utils.cache.get_or_set` wrapper to maintain
+        compatibility with tests expecting a (value, status) tuple.
+        """
+        with self._lock:
+            self._evict_expired()
+            entry = self._cache.get(key)
+            if entry is None:
+                return None, "miss"
+            self._update_access_order(key)
+            if entry.is_fresh:
+                return entry.value, "hit_fresh"
+            if entry.is_stale_but_revalidatable:
+                return entry.value, "hit_stale"
+            # else: treated as miss
+            return None, "miss"
+
+    async def wait_for_bg_refresh(
+        self,
+        key: str,
+        timeout: Optional[float] = None,
+        swallow_exceptions: bool = False,
+    ) -> bool:
+        """Test helper: wait for an active background refresh for `key` to complete.
+
+        Returns True if there was an active refresh and it completed within the timeout.
+        Returns False immediately if there is no active refresh for the key.
+
+        Raises asyncio.TimeoutError if the wait times out. If the background task
+        raises an exception, that exception will propagate to the caller.
+        """
+        task = self._refresh_tasks.get(key)
+        if not task:
+            return False
+
+        try:
+            await asyncio.wait_for(task, timeout)
+            return True
+        except Exception:
+            if swallow_exceptions:
+                # Caller wants to wait for completion but ignore errors
+                return True
+            raise
 
     def clear(self) -> None:
         """Clear all cache entries"""
