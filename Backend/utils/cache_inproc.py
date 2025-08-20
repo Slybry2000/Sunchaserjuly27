@@ -2,6 +2,7 @@
 In-process cache with SWR (Stale-While-Revalidate) support
 """
 import asyncio
+import os
 import time
 from typing import Any, Callable, Optional
 from dataclasses import dataclass
@@ -168,9 +169,14 @@ class InProcessCache:
         # Start background refresh outside the lock
         if should_refresh:
             logger.debug(f"Starting background refresh for: {key}")
-            task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
-            self._refresh_tasks[key] = task
-            return value_to_return
+            if SYNC_REFRESH:
+                # Run refresh inline for deterministic tests
+                await self._background_refresh(key, factory, ttl, swr)
+                return value_to_return
+            else:
+                task = asyncio.create_task(self._background_refresh(key, factory, ttl, swr))
+                self._refresh_tasks[key] = task
+                return value_to_return
 
         if value_to_return is not None:
             return value_to_return
@@ -198,24 +204,33 @@ class InProcessCache:
         
         # Start new task
         logger.debug(f"Fetching new value: {key}")
-        
+
         async def fetch_task():
             try:
                 if asyncio.iscoroutinefunction(factory):
                     value = await factory()
                 else:
                     value = factory()
-                
+
                 await self.set(key, value, ttl, swr)
                 return value
             finally:
                 # Clean up refresh task
                 self._refresh_tasks.pop(key, None)
-        
+
+        # If synchronous-refresh is requested for tests, run inline to keep behavior deterministic
+        if SYNC_REFRESH:
+            try:
+                result = await fetch_task()
+                return result
+            finally:
+                # ensure cleanup
+                self._refresh_tasks.pop(key, None)
+
         # Store task for single-flight
         task = asyncio.create_task(fetch_task())
         self._refresh_tasks[key] = task
-        
+
         return await task
 
     async def _background_refresh(
@@ -313,4 +328,10 @@ class InProcessCache:
 
 
 # Global cache instance
+# Allow tests to force synchronous background refresh for determinism.
+# When CACHE_REFRESH_SYNC=true, background refreshes run inline instead of
+# being scheduled as asyncio tasks. This makes tests deterministic.
+SYNC_REFRESH = os.getenv("CACHE_REFRESH_SYNC", "false").lower() == "true"
+
+
 cache = InProcessCache()
