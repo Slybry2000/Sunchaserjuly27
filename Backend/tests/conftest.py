@@ -10,10 +10,10 @@ except Exception:
     # best-effort: if import fails, plugin may still be available via entrypoints
     pass
 
-# Ensure pytest-asyncio plugin is loaded so plain `async def` tests are supported
-# across CI and local runs. This makes async tests run without requiring
-# explicit @pytest.mark.asyncio on every test.
-pytest_plugins = ["pytest_asyncio"]
+# Rely on the installed pytest-asyncio package and root-level pytest.ini
+# (asyncio_mode = auto) to run plain `async def` tests. Defining
+# `pytest_plugins` in a non-top-level conftest is deprecated and breaks
+# collection under pytest >=8.4.
 
 
 @pytest.fixture(scope="session", autouse=True)
