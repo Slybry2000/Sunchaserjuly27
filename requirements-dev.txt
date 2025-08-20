@@ -22,5 +22,11 @@ codecov==2.1.13
 # Security audit
 pip-audit==2.3.1
 
+# Explicit pins for transitive deps with known advisories (pin safe minimums)
+# h11: fix available in 0.15.0+
+h11>=0.15.0
+# setuptools: fix available in 78.1.1+
+setuptools>=78.1.1
+
 # Optional: HTTP mocking libs (pick one)
 # respx==0.18.0
