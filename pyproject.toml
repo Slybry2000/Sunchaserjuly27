@@ -5,3 +5,4 @@ filterwarnings = [
   "ignore::DeprecationWarning:fastapi.*",
   "ignore::DeprecationWarning:starlette.*",
 ]
+addopts = "--timeout=30 --timeout-method=thread --showlocals"

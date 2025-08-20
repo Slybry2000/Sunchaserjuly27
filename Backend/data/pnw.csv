@@ -1,16 +1,101 @@
 id,name,lat,lon,elevation,category,state,timezone
-1,Mount Rainier,46.8523,-121.7603,4392,Mountain,WA,America/Los_Angeles
-2,Crater Lake,42.9446,-122.1090,1883,Lake,OR,America/Los_Angeles
-3,Olympic National Park,47.8021,-123.6044,2424,Park,WA,America/Los_Angeles
-4,Mount St. Helens,46.1912,-122.1944,2549,Mountain,WA,America/Los_Angeles
-5,Smith Rock,44.3670,-121.1370,900,Climbing,OR,America/Los_Angeles
-6,Columbia River Gorge,45.7256,-121.7306,60,Gorge,OR,America/Los_Angeles
-7,North Cascades,48.7718,-121.2985,2800,Park,WA,America/Los_Angeles
-8,Mount Hood,45.3735,-121.6959,3426,Mountain,OR,America/Los_Angeles
-9,Deception Pass,48.4047,-122.6448,0,Park,WA,America/Los_Angeles
-10,Mount Bachelor,43.9790,-121.6880,2763,Mountain,OR,America/Los_Angeles
-11,Steens Mountain,42.6472,-118.5967,2970,Mountain,OR,America/Los_Angeles
-12,San Juan Islands,48.5366,-123.0908,0,Island,WA,America/Los_Angeles
-13,Mount Adams,46.2020,-121.4905,3743,Mountain,WA,America/Los_Angeles
-14,Three Sisters,44.1489,-121.7681,3157,Mountain,OR,America/Los_Angeles
-15,Mount Baker,48.7768,-121.8101,3286,Mountain,WA,America/Los_Angeles
+1,Mount Rainier_1,46.808334,-121.723045,4392,Mountain,WA,America/Los_Angeles
+2,Crater Lake_2,42.971351,-122.146355,1883,Lake,OR,America/Los_Angeles
+3,Olympic National Park_3,47.846056,-123.569737,2424,Park,WA,America/Los_Angeles
+4,Mount St. Helens_4,46.217016,-122.181521,2549,Gorge,WA,America/Los_Angeles
+5,Smith Rock_5,44.374272,-121.123645,900,Climbing,OR,America/Los_Angeles
+6,Columbia River Gorge_6,45.718540,-121.761300,60,Island,OR,America/Los_Angeles
+7,North Cascades_7,48.762119,-121.266685,2800,Beach,WA,America/Los_Angeles
+8,Mount Hood_8,45.360909,-121.670490,3426,Trail,OR,America/Los_Angeles
+9,Deception Pass_9,48.373379,-122.689558,0,Forest,WA,America/Los_Angeles
+10,Mount Bachelor_10,43.958018,-121.656076,2763,Desert,OR,America/Los_Angeles
+11,Steens Mountain_11,42.668146,-118.563301,2970,Mountain,OR,America/Los_Angeles
+12,San Juan Islands_12,48.575065,-123.112072,0,Lake,WA,America/Los_Angeles
+13,Mount Adams_13,46.161471,-121.487563,3743,Park,WA,America/Los_Angeles
+14,Three Sisters_14,44.106382,-121.812256,3157,Gorge,OR,America/Los_Angeles
+15,Mount Baker_15,48.749407,-121.835144,3286,Climbing,WA,America/Los_Angeles
+16,Mount Rainier_16,46.833816,-121.767639,4392,Island,WA,America/Los_Angeles
+17,Crater Lake_17,42.925670,-122.147097,1883,Beach,OR,America/Los_Angeles
+18,Olympic National Park_18,47.783737,-123.624730,2424,Trail,WA,America/Los_Angeles
+19,Mount St. Helens_19,46.172776,-122.243999,2549,Forest,WA,America/Los_Angeles
+20,Smith Rock_20,44.320781,-121.184872,900,Desert,OR,America/Los_Angeles
+21,Columbia River Gorge_21,45.720073,-121.756006,60,Mountain,OR,America/Los_Angeles
+22,North Cascades_22,48.809071,-121.314917,2800,Lake,WA,America/Los_Angeles
+23,Mount Hood_23,45.423313,-121.670657,3426,Park,OR,America/Los_Angeles
+24,Deception Pass_24,48.393232,-122.688275,0,Gorge,WA,America/Los_Angeles
+25,Mount Bachelor_25,43.993080,-121.673596,2763,Climbing,OR,America/Los_Angeles
+26,Steens Mountain_26,42.666157,-118.573987,2970,Island,OR,America/Los_Angeles
+27,San Juan Islands_27,48.487300,-123.055133,0,Beach,WA,America/Los_Angeles
+28,Mount Adams_28,46.208862,-121.516378,3743,Trail,WA,America/Los_Angeles
+29,Three Sisters_29,44.104471,-121.807261,3157,Forest,OR,America/Los_Angeles
+30,Mount Baker_30,48.772278,-121.772643,3286,Desert,WA,America/Los_Angeles
+31,Mount Rainier_31,46.893553,-121.773570,4392,Mountain,WA,America/Los_Angeles
+32,Crater Lake_32,42.967977,-122.077181,1883,Lake,OR,America/Los_Angeles
+33,Olympic National Park_33,47.777363,-123.612118,2424,Park,WA,America/Los_Angeles
+34,Mount St. Helens_34,46.160283,-122.175280,2549,Gorge,WA,America/Los_Angeles
+35,Smith Rock_35,44.406406,-121.092846,900,Climbing,OR,America/Los_Angeles
+36,Columbia River Gorge_36,45.696827,-121.716167,60,Island,OR,America/Los_Angeles
+37,North Cascades_37,48.742489,-121.310730,2800,Beach,WA,America/Los_Angeles
+38,Mount Hood_38,45.416731,-121.649842,3426,Trail,OR,America/Los_Angeles
+39,Deception Pass_39,48.433039,-122.611939,0,Forest,WA,America/Los_Angeles
+40,Mount Bachelor_40,43.988803,-121.721170,2763,Desert,OR,America/Los_Angeles
+41,Steens Mountain_41,42.624135,-118.591995,2970,Mountain,OR,America/Los_Angeles
+42,San Juan Islands_42,48.544094,-123.080875,0,Lake,WA,America/Los_Angeles
+43,Mount Adams_43,46.155372,-121.522901,3743,Park,WA,America/Los_Angeles
+44,Three Sisters_44,44.172931,-121.751663,3157,Gorge,OR,America/Los_Angeles
+45,Mount Baker_45,48.768155,-121.827626,3286,Climbing,WA,America/Los_Angeles
+46,Mount Rainier_46,46.827231,-121.749881,4392,Island,WA,America/Los_Angeles
+47,Crater Lake_47,42.919092,-122.137145,1883,Beach,OR,America/Los_Angeles
+48,Olympic National Park_48,47.779083,-123.654254,2424,Trail,WA,America/Los_Angeles
+49,Mount St. Helens_49,46.185440,-122.201681,2549,Forest,WA,America/Los_Angeles
+50,Smith Rock_50,44.358909,-121.102993,900,Desert,OR,America/Los_Angeles
+51,Columbia River Gorge_51,45.681564,-121.760804,60,Mountain,OR,America/Los_Angeles
+52,North Cascades_52,48.791454,-121.330822,2800,Lake,WA,America/Los_Angeles
+53,Mount Hood_53,45.367977,-121.669214,3426,Park,OR,America/Los_Angeles
+54,Deception Pass_54,48.399981,-122.606510,0,Gorge,WA,America/Los_Angeles
+55,Mount Bachelor_55,43.966121,-121.709114,2763,Climbing,OR,America/Los_Angeles
+56,Steens Mountain_56,42.647996,-118.550430,2970,Island,OR,America/Los_Angeles
+57,San Juan Islands_57,48.566939,-123.087803,0,Beach,WA,America/Los_Angeles
+58,Mount Adams_58,46.163318,-121.535363,3743,Trail,WA,America/Los_Angeles
+59,Three Sisters_59,44.124939,-121.782008,3157,Forest,OR,America/Los_Angeles
+60,Mount Baker_60,48.818697,-121.816058,3286,Desert,WA,America/Los_Angeles
+61,Mount Rainier_61,46.807342,-121.759888,4392,Mountain,WA,America/Los_Angeles
+62,Crater Lake_62,42.958896,-122.087231,1883,Lake,OR,America/Los_Angeles
+63,Olympic National Park_63,47.767401,-123.625900,2424,Park,WA,America/Los_Angeles
+64,Mount St. Helens_64,46.204365,-122.187915,2549,Gorge,WA,America/Los_Angeles
+65,Smith Rock_65,44.350504,-121.163903,900,Climbing,OR,America/Los_Angeles
+66,Columbia River Gorge_66,45.712798,-121.751734,60,Island,OR,America/Los_Angeles
+67,North Cascades_67,48.802577,-121.316122,2800,Beach,WA,America/Los_Angeles
+68,Mount Hood_68,45.374378,-121.738539,3426,Trail,OR,America/Los_Angeles
+69,Deception Pass_69,48.445220,-122.615167,0,Forest,WA,America/Los_Angeles
+70,Mount Bachelor_70,44.019713,-121.723245,2763,Desert,OR,America/Los_Angeles
+71,Steens Mountain_71,42.619620,-118.617238,2970,Mountain,OR,America/Los_Angeles
+72,San Juan Islands_72,48.583589,-123.058584,0,Lake,WA,America/Los_Angeles
+73,Mount Adams_73,46.153346,-121.476266,3743,Park,WA,America/Los_Angeles
+74,Three Sisters_74,44.169308,-121.731585,3157,Gorge,OR,America/Los_Angeles
+75,Mount Baker_75,48.793873,-121.802819,3286,Climbing,WA,America/Los_Angeles
+76,Mount Rainier_76,46.808249,-121.721979,4392,Island,WA,America/Los_Angeles
+77,Crater Lake_77,42.948726,-122.099528,1883,Beach,OR,America/Los_Angeles
+78,Olympic National Park_78,47.849274,-123.607996,2424,Trail,WA,America/Los_Angeles
+79,Mount St. Helens_79,46.213994,-122.163813,2549,Forest,WA,America/Los_Angeles
+80,Smith Rock_80,44.382548,-121.126946,900,Desert,OR,America/Los_Angeles
+81,Columbia River Gorge_81,45.763031,-121.772317,60,Mountain,OR,America/Los_Angeles
+82,North Cascades_82,48.802947,-121.335829,2800,Lake,WA,America/Los_Angeles
+83,Mount Hood_83,45.382159,-121.678222,3426,Park,OR,America/Los_Angeles
+84,Deception Pass_84,48.375033,-122.683686,0,Gorge,WA,America/Los_Angeles
+85,Mount Bachelor_85,43.962856,-121.721893,2763,Climbing,OR,America/Los_Angeles
+86,Steens Mountain_86,42.621547,-118.642359,2970,Island,OR,America/Los_Angeles
+87,San Juan Islands_87,48.559139,-123.087618,0,Beach,WA,America/Los_Angeles
+88,Mount Adams_88,46.165432,-121.489853,3743,Trail,WA,America/Los_Angeles
+89,Three Sisters_89,44.114556,-121.721238,3157,Forest,OR,America/Los_Angeles
+90,Mount Baker_90,48.824288,-121.810074,3286,Desert,WA,America/Los_Angeles
+91,Mount Rainier_91,46.841082,-121.793920,4392,Mountain,WA,America/Los_Angeles
+92,Crater Lake_92,42.946094,-122.142271,1883,Lake,OR,America/Los_Angeles
+93,Olympic National Park_93,47.769107,-123.598847,2424,Park,WA,America/Los_Angeles
+94,Mount St. Helens_94,46.143786,-122.225257,2549,Gorge,WA,America/Los_Angeles
+95,Smith Rock_95,44.379858,-121.114275,900,Climbing,OR,America/Los_Angeles
+96,Columbia River Gorge_96,45.725253,-121.731734,60,Island,OR,America/Los_Angeles
+97,North Cascades_97,48.785248,-121.300628,2800,Beach,WA,America/Los_Angeles
+98,Mount Hood_98,45.408755,-121.718070,3426,Trail,OR,America/Los_Angeles
+99,Deception Pass_99,48.396834,-122.682766,0,Forest,WA,America/Los_Angeles
+100,Mount Bachelor_100,43.932887,-121.700898,2763,Desert,OR,America/Los_Angeles

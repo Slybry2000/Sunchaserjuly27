@@ -1,6 +1,13 @@
 import pytest
 import asyncio
 from utils.cache import get_or_set
+from utils.cache_inproc import cache as _global_inproc_cache
+
+
+@pytest.fixture(autouse=True)
+def clear_global_cache():
+    # Ensure tests start with an empty in-process cache
+    _global_inproc_cache.clear()
 
 @pytest.mark.asyncio
 async def test_cache_hit_and_miss():

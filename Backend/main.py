@@ -1,16 +1,29 @@
-
-
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Request
 from services.geocode import geocode
 from utils.cache import cached
 from services.http import get_http_client, close_http_client
 from middleware.observability import ObservabilityMiddleware
 from routers.recommend import router as recommend_router
+from routers.internal import router as internal_router
+from routers.forecasts import router as forecasts_router
 from models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
 from fastapi.responses import JSONResponse
 
-app = FastAPI(title="Sunshine Backend API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize shared resources (e.g., HTTP client)
+    await get_http_client()
+    try:
+        yield
+    finally:
+        # Cleanup shared resources
+        await close_http_client()
+
+app = FastAPI(title="Sunshine Backend API", version="1.0.0", lifespan=lifespan)
 app.include_router(recommend_router)
+app.include_router(internal_router)
+app.include_router(forecasts_router)
 
 # Add observability middleware
 app.add_middleware(ObservabilityMiddleware)
@@ -43,15 +56,6 @@ async def timeout_budget_handler(request: Request, exc: TimeoutBudgetExceeded):
         status_code=504,
         content=ErrorPayload(error="timeout_budget_exceeded", detail=str(exc)).model_dump(),
     )
-
-# Lifespan event handlers for shared HTTP client
-@app.on_event("startup")
-async def on_startup():
-    await get_http_client()
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    await close_http_client()
 
 @app.get('/health')
 async def health():

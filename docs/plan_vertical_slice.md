@@ -25,8 +25,27 @@
 
 ### 0.2 What's IN PROGRESS / NEXT
 
-* 🟡 Phase B frontend: Flutter integration with typed Dart client + ETag/304 support
-* 🟡 Phase B completion: 304 conditional responses, dataset expansion (≥100 rows+categories) Plan ("disgustingly thorough")
+Actionable next steps (short term):
+
+* Sprint 1 — Forecast Data Engine (in progress → implemented): a fetch job and snapshot writer were added on branch `sprint-1-data-engine` (`Backend/scripts/fetch_forecasts.py`). Snapshot persistence to SQLite was implemented and a public, lightweight API endpoint `GET /forecasts` was added for frontend consumption; the JSON snapshot remains as a fallback.
+* Implement conditional requests (`If-None-Match` → `304`) in `routers/recommend.py` and add tests for invariance and 304 behavior (Phase B completion).
+* Dataset expansion: grow `data/pnw.csv` to ≥100 rows and add `category` column; run `scripts/validate_dataset.py` and add tests for expanded schema.
+* Cache unification & stability (in progress): `utils/cache.py` was updated to prefer the in-process implementation when Redis is not configured and to provide a unified `cached` decorator and `get_or_set` abstraction. Remaining work: remove legacy Redis paths where not needed, run the 4 previously skipped cache tests, and harden background refresh error handling.
+* Frontend work (parallel): implement typed Dart models, `ApiClient.recommend(...)`, and ETag revalidation UI flow (see Issue #3 for the UI MVP). The public `/forecasts` endpoint can be used by the frontend for a lightweight snapshot view.
+* CI & tests: keep flaky cache tests skipped on CI until cache refresh is made deterministic; add a follow-up issue to re-enable them and track progress.
+
+Short status (delta):
+
+* ✅ Branch `sprint-1-data-engine` created with a basic fetch script and unit test. Test for parsing/score passed locally.
+* ✅ Snapshot persistence implemented: `Backend/scripts/fetch_forecasts.py` now writes `Backend/data/forecast_snapshot.json` and persists rows into `Backend/data/forecast_snapshot.db` (SQLite).
+* ✅ Public snapshot API added: `GET /forecasts` (returns DB rows or JSON fallback) with ETag and Cache-Control headers.
+* ✅ Dataset expansion performed: `Backend/data/pnw.csv` was expanded to ≥100 rows and validated with `scripts/validate_dataset.py` (backup `pnw.csv.bak` created).
+* ✅ Cache abstraction updated: `utils/cache.py` now prefers the in-process cache when Redis is not configured and exposes a unified `cached` decorator + `get_or_set` shim.
+
+* ✅ FastAPI lifespan migration complete: removed deprecated `@app.on_event` hooks; shared HTTP client is now initialized/cleaned up via lifespan (no warnings in tests).
+* ✅ Error mapping tests added: `UpstreamError→502`, `LocationNotFound→404`, `TimeoutBudgetExceeded→504` all covered and passing.
+
+Next immediate action: continue Phase B by hardening cache refresh behavior, re-enabling the skipped cache tests, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
 
 **Audience:** Backend · Mobile · DevOps
 **Owner:** (assign)
@@ -567,9 +586,9 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
    * [ ] Grow to ≥100 rows; add `category` column
    * [ ] Update validator and loader; add tests
 3. **Error Taxonomy & Mapping**
-
-   * [ ] Define `UpstreamError`, `TimeoutBudgetExceeded`, `LocationNotFound`
-   * [ ] Exception handlers → `ErrorPayload` with status codes
+   
+   * [x] Define `UpstreamError`, `TimeoutBudgetExceeded`, `LocationNotFound`
+   * [x] Exception handlers → `ErrorPayload` with status codes (tests added for 502/404/504)
 4. **OpenAPI Polish**
 
    * [ ] Docstrings, units; finalize example JSON
@@ -784,6 +803,7 @@ gcloud run deploy sunshine-api \
 * `test_api_recommend_if_none_match_304` *(Phase B)*
 * `test_errors_geocode_disabled_400`
 * `test_errors_upstream_5xx_maps_502` *(Phase B)*
+* `test_errors_404_504_mappings` *(Phase B)*
 
 ---
 

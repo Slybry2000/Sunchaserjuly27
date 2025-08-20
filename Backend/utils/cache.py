@@ -1,17 +1,33 @@
+"""Cache utilities abstraction.
+
+This module exposes a simple `cached` decorator and a `get_or_set` helper.
+If Redis is configured via `REDIS_URL` (and optionally `REDIS_TOKEN`) the
+Redis-backed `CacheClient` will be used. Otherwise the in-process
+implementation in `cache_inproc.py` is used by default (recommended for
+development and tests).
 """
-Redis caching utilities
-"""
+
 import json
 import os
 from functools import wraps
-from typing import Any
+from typing import Any, Callable
 
-import redis.asyncio as redis
+try:
+    import redis.asyncio as redis
+except Exception:
+    redis = None
+
 import asyncio
+
+from .cache_inproc import cache as _inproc_cache
 
 
 class CacheClient:
-    """Async Redis cache client"""
+    """Async Redis cache client (optional).
+
+    This is only used when REDIS_URL (or REDIS_TOKEN) is set. For local
+    development and tests the in-process cache is preferred.
+    """
 
     def __init__(self):
         self.redis_url = os.getenv("REDIS_URL")
@@ -19,180 +35,122 @@ class CacheClient:
         self._client = None
 
     async def get_client(self):
-        """Get or create Redis client"""
         if self._client is None:
-            if self.redis_url and self.redis_token:
-                # Upstash Redis format
+            if self.redis_url and redis is not None:
+                # Upstash or other URL
                 self._client = redis.from_url(
                     self.redis_url,
                     password=self.redis_token,
-                    decode_responses=True
+                    decode_responses=True,
                 )
             else:
-                # Local Redis fallback (for development)
-                self._client = redis.Redis(
-                    host='localhost',
-                    port=6379,
-                    decode_responses=True
-                )
+                # No Redis available
+                raise RuntimeError("Redis not configured or unavailable")
         return self._client
 
     async def get(self, key: str) -> Any | None:
-        """Get value from cache"""
         try:
             client = await self.get_client()
             value = await client.get(key)
             return json.loads(value) if value else None
         except Exception:
-            # Fail gracefully if cache is unavailable
             return None
 
     async def set(self, key: str, value: Any, ttl: int = 3600) -> bool:
-        """Set value in cache with TTL"""
         try:
             client = await self.get_client()
             await client.setex(key, ttl, json.dumps(value))
             return True
         except Exception:
-            # Fail gracefully if cache is unavailable
             return False
 
 
-# Global cache instance
-cache = CacheClient()
+# Choose cache implementation: prefer Redis when configured, else use in-proc
+_use_redis = bool(os.getenv("REDIS_URL") or os.getenv("REDIS_TOKEN")) and redis is not None
+if _use_redis:
+    cache = CacheClient()
+else:
+    cache = _inproc_cache
 
 
-def cached(ttl: int = 3600, key_prefix: str = ""):
+def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
+    """Decorator for caching coroutine function results.
+
+    When applied it will attempt to read from the configured cache and
+    otherwise execute the function and cache the result.
     """
-    Decorator for caching function results
 
-    Args:
-        ttl: Time to live in seconds
-        key_prefix: Prefix for cache key
-    """
-    def decorator(func):
+    def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            # Create cache key from function name and arguments
             cache_key = f"{key_prefix}:{func.__name__}:{hash(str(args) + str(kwargs))}"
 
-            # Try to get from cache first
-            cached_result = await cache.get(cache_key)
+            # Try cache get
+            try:
+                cached_result = await cache.get(cache_key)
+            except Exception:
+                cached_result = None
+
             if cached_result is not None:
                 return cached_result
 
-            # Execute function and cache result
+            # Compute and set
             result = await func(*args, **kwargs)
-            await cache.set(cache_key, result, ttl)
+            try:
+                await cache.set(cache_key, result, ttl)
+            except Exception:
+                # Best-effort; don't fail the request
+                pass
             return result
 
         return wrapper
+
     return decorator
 
 
-import time
+async def get_or_set(key: str, factory: Callable, ttl: int = 300, stale_reval: int = 60):
+    """Unified get_or_set abstraction.
 
-# Simple in-memory cache shim used for tests. Implements minimal SWR and
-# single-flight semantics expected by the test-suite. This keeps tests fast
-# and avoids an external Redis dependency.
-_shim_cache: dict[str, dict] = {}
-_shim_lock = asyncio.Lock()
-
-
-async def get_or_set(key: str, factory, ttl: int = 300, stale_reval: int = 60):
-    """Simple async get_or_set with SWR and single-flight.
-
-    Returns (value, status) where status is one of 'miss', 'hit_fresh', 'hit_stale'.
-    Concurrent callers should await the same in-flight producer (single-flight)
-    instead of receiving a placeholder None value.
+    If the underlying cache implements `get_or_set` (in-process cache) it
+    will be used. Otherwise this wrapper falls back to a simple get+set
+    implementation against the Redis client.
+    Returns (value, status) where status is one of 'miss','hit_fresh','hit_stale'.
     """
-    now = time.time()
+    # Prefer atomic get_or_set if available (inproc cache)
+    if hasattr(cache, "get_or_set"):
+        # If the cache supports get_status, ask first so we can return the
+        # appropriate (value, status) tuple. This preserves the expected
+        # behavior where the first call that computes the value returns
+        # status 'miss'. Only call get_or_set to trigger computation when
+        # get_status reports a miss.
+        if hasattr(cache, "get_status"):
+            val, status = await cache.get_status(key)
+            if status != "miss":
+                return val, status
+            # else: fall through to compute
 
-    # Fast path: check existing entry under lock
-    async with _shim_lock:
-        entry = _shim_cache.get(key)
-        if entry:
-            task = entry.get("task")
-            age = now - entry["created_at"]
-            ttl_sec = entry["ttl"]
-            swr = entry["swr"]
+        # Compute (may be fresh or cached depending on race)
+        val = await cache.get_or_set(key, factory, ttl, stale_reval)
+        return val, "miss"
 
-            # If a producer is already running, await it (single-flight)
-            if task is not None and not task.done():
-                running_task = task
-            else:
-                running_task = None
-
-            # Fresh value
-            if age < ttl_sec and entry["value"] is not None:
-                return entry["value"], "hit_fresh"
-
-            # Stale but within SWR window: trigger background refresh if not running
-            if ttl_sec <= age < (ttl_sec + swr):
-                if running_task is None:
-                    async def _refresh():
-                        try:
-                            val = await factory() if asyncio.iscoroutinefunction(factory) else await asyncio.to_thread(factory)
-                            async with _shim_lock:
-                                ent = _shim_cache.get(key)
-                                if ent is not None:
-                                    ent["value"] = val
-                                    ent["created_at"] = time.time()
-                        finally:
-                            async with _shim_lock:
-                                ent = _shim_cache.get(key)
-                                if ent is not None:
-                                    ent["task"] = None
-
-                    entry["task"] = asyncio.create_task(_refresh())
-                # return stale value to caller
-                return entry["value"], "hit_stale"
-
-            # Evict expired beyond SWR
-            if ttl_sec + swr <= age:
-                del _shim_cache[key]
-
-            # If a producer was running, await it (outside lock)
-            if running_task is not None:
-                # we'll await below outside the lock
-                pass
-            else:
-                # fall through to start a new producer
-                pass
-        else:
-            running_task = None
-
-        # If there's a running producer, await it and return the produced value
-        if entry and running_task is not None:
-            # release lock then await
-            await running_task
-            async with _shim_lock:
-                ent = _shim_cache.get(key)
-                if ent is None:
-                    return None, "miss"
-                return ent["value"], "miss"
-
-        # Not present or we need to start a new producer: create task and placeholder
-        future = asyncio.create_task(factory() if asyncio.iscoroutinefunction(factory) else asyncio.to_thread(factory))
-        _shim_cache[key] = {"value": None, "created_at": now, "ttl": ttl, "swr": stale_reval, "task": future}
-
-    # Await the producer outside the lock
+    # Fallback: simple get then set
     try:
-        val = await future
+        val = await cache.get(key)
     except Exception:
-        # If the producer failed, clean up placeholder
-        async with _shim_lock:
-            ent = _shim_cache.get(key)
-            if ent and ent.get("task") is future:
-                del _shim_cache[key]
-        raise
+        val = None
 
-    # Store the produced value
-    async with _shim_lock:
-        ent = _shim_cache.get(key)
-        if ent is not None:
-            ent["value"] = val
-            ent["created_at"] = time.time()
-            ent["task"] = None
+    if val is not None:
+        return val, "hit_fresh"
+
+    # compute and store
+    if asyncio.iscoroutinefunction(factory):
+        val = await factory()
+    else:
+        val = await asyncio.to_thread(factory)
+
+    try:
+        await cache.set(key, val, ttl)
+    except Exception:
+        pass
 
     return val, "miss"
