@@ -1,8 +1,8 @@
 # Sunshine Backend API
 
 ![Flutter CI](https://github.com/Slybry2000/Sunchaserjuly27/actions/workflows/flutter_ci.yml/badge.svg?branch=master)
-![Python CI](https://github.com/Slybry2000/Sunchaserjuly27/actions/workflows/Backend/.github/workflows/ci.yml/badge.svg?branch=master)
-![Lint & Type](https://github.com/Slybry2000/Sunchaserjuly27/actions/workflows/Backend/.github/workflows/ci.yml/badge.svg?branch=master)
+![Python Tests](https://github.com/Slybry2000/Sunchaserjuly27/actions/workflows/ci-tests.yml/badge.svg?branch=master)
+![Lint & Type](https://github.com/Slybry2000/Sunchaserjuly27/actions/workflows/ci-lint.yml/badge.svg?branch=master)
 
 A FastAPI-based service for finding sunny locations using weather data and geocoding.
 
