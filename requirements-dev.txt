@@ -1,24 +1,25 @@
 # Developer-only dependencies for testing, linting and coverage
 # Install with: pip install -r requirements-dev.txt
+# Pinned for deterministic CI runs. Review and update pins periodically.
 
 # Linting & formatting
-ruff
+ruff==0.4.16
 
 # Static type checking
-mypy
+mypy==1.6.1
 
 # Testing
-pytest
-pytest-asyncio
-pytest-cov
-pytest-httpx
-freezegun
+pytest==7.4.0
+pytest-asyncio==0.21.2
+pytest-cov==4.1.0
+pytest-httpx==0.23.0
+freezegun==1.2.2
 
 # Coverage upload
-codecov
+codecov==2.1.13
 
 # Security audit
-pip-audit
+pip-audit==2.3.1
 
 # Optional: HTTP mocking libs (pick one)
-# respx
+# respx==0.18.0
