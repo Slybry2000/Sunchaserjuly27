@@ -1,6 +1,6 @@
 from decimal import Decimal
 from freezegun import freeze_time
-from utils.etag import strong_etag_for_obj
+from Backend.utils.etag import strong_etag_for_obj
 
 
 def _without_generated_at(payload: dict) -> dict:

@@ -1,5 +1,5 @@
 import json
-from utils.etag import strong_etag_for_obj
+from Backend.utils.etag import strong_etag_for_obj
 
 def _without_generated_at(payload: dict) -> dict:
     return {k: v for k, v in payload.items() if k != "generated_at"}

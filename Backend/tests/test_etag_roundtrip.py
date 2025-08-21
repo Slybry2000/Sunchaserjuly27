@@ -1,5 +1,5 @@
 import json
-from utils.etag import strong_etag_for_obj
+from Backend.utils.etag import strong_etag_for_obj
 
 
 def _without_generated_at_or_recommendations(payload: dict) -> dict:

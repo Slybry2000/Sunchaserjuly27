@@ -28,7 +28,7 @@ def enable_sync_cache_refresh():
     # If the cache module was already imported, reload it so module-level
     # SYNC_REFRESH reads the updated env var.
     try:
-        import utils.cache_inproc as _cache_inproc
+        import Backend.utils.cache_inproc as _cache_inproc
         importlib.reload(_cache_inproc)
     except Exception:
         # best-effort: tests that import the module later will pick up the env var
