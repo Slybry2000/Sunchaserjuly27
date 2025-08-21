@@ -18,6 +18,7 @@ except Exception:
     redis = None  # type: ignore
 
 import asyncio
+import inspect
 
 from .cache_inproc import cache as _inproc_cache
 
@@ -106,6 +107,13 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
                 # Best-effort; don't fail the request
                 pass
             return result
+
+        # Preserve the original function signature so FastAPI can detect parameters
+        try:
+            wrapper.__signature__ = inspect.signature(func)
+        except Exception:
+            # best-effort: if signature cannot be set, continue without failing
+            pass
 
         return wrapper
 
