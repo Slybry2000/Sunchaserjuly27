@@ -110,7 +110,9 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
 
         # Preserve the original function signature so FastAPI can detect parameters
         try:
-            wrapper.__signature__ = inspect.signature(func)
+            # use setattr so static checkers (mypy) don't complain about setting
+            # arbitrary attributes on Callable objects
+            setattr(wrapper, "__signature__", inspect.signature(func))
         except Exception:
             # best-effort: if signature cannot be set, continue without failing
             pass

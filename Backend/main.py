@@ -4,6 +4,7 @@ from Backend.services.geocode import geocode
 from Backend.utils.cache import cached
 from Backend.services.http import get_http_client, close_http_client
 from Backend.middleware.observability import ObservabilityMiddleware
+from typing import cast, Any as _Any
 from Backend.routers.recommend import router as recommend_router
 from Backend.routers.internal import router as internal_router
 from Backend.routers.forecasts import router as forecasts_router
@@ -26,7 +27,7 @@ app.include_router(internal_router)
 app.include_router(forecasts_router)
 
 # Add observability middleware
-app.add_middleware(ObservabilityMiddleware)
+app.add_middleware(cast(_Any, ObservabilityMiddleware))
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
