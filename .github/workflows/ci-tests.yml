@@ -6,14 +6,48 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      PYTHONPATH: ${{ github.workspace }}
       CACHE_REFRESH_SYNC: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Install dependencies (runtime + dev/test)
+        run: |
+          python -m pip install --upgrade pip
+          # Install runtime requirements if present
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # Install dev/test requirements if present
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+          # Fail if neither requirements file exists
+          if [ ! -f requirements.txt ] && [ ! -f requirements-dev.txt ]; then
+            echo "No requirements file found (requirements.txt or requirements-dev.txt)" && exit 1
+          fi
+      - name: Install dev/test deps
+        run: |
+          # Ensure pytest and related dev/test tools are available for subsequent steps
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          else
+            echo "No requirements-dev.txt found; continuing (pytest may be unavailable)"
+          fi
+      - name: Install package in editable mode
+        run: |
+          # Ensure the Backend package is importable as a package during tests
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            pip install -e .
+          else
+            echo "No pyproject.toml or setup.py found; skipping editable install"
+          fi
+      - name: Run ETag invariance quick checks
+        run: |
+          pytest Backend/tests/test_etag_invariance.py Backend/tests/test_etag_roundtrip.py -q
+        # Fail fast if ETag regressions introduced
       - name: Run tests with coverage
         run: pytest --cov=Backend --cov-report=xml:coverage.xml -q
       - name: Upload coverage to Codecov

@@ -1,13 +1,10 @@
 import csv
-from typing import List, Dict
 from pathlib import Path
-from utils.geo import haversine
-
-DATA_PATH = Path(__file__).parent.parent / "data" / "pnw.csv"
-
 from functools import lru_cache
 import heapq
-from utils.geo import haversine_miles, bbox_degrees
+from Backend.utils.geo import haversine_miles, bbox_degrees
+
+DATA_PATH = Path(__file__).parent.parent / "data" / "pnw.csv"
 
 @lru_cache
 def all_locations() -> list[dict]:

@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Request
-from services.geocode import geocode
-from utils.cache import cached
-from services.http import get_http_client, close_http_client
-from middleware.observability import ObservabilityMiddleware
-from routers.recommend import router as recommend_router
-from routers.internal import router as internal_router
-from routers.forecasts import router as forecasts_router
-from models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
+from fastapi import FastAPI, Query, Request
+from Backend.services.geocode import geocode
+from Backend.utils.cache import cached
+from Backend.services.http import get_http_client, close_http_client
+from Backend.middleware.observability import ObservabilityMiddleware
+from typing import cast, Any as _Any
+from Backend.routers.recommend import router as recommend_router
+from Backend.routers.internal import router as internal_router
+from Backend.routers.forecasts import router as forecasts_router
+from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
 from fastapi.responses import JSONResponse
 
 @asynccontextmanager
@@ -26,7 +27,7 @@ app.include_router(internal_router)
 app.include_router(forecasts_router)
 
 # Add observability middleware
-app.add_middleware(ObservabilityMiddleware)
+app.add_middleware(cast(_Any, ObservabilityMiddleware))
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
@@ -74,7 +75,8 @@ async def geocode_endpoint(q: str = Query(..., description="Location query (e.g.
             "lat": lat,
             "lon": lon
         }
-    except LocationNotFound as e:
+    except LocationNotFound:
         raise
     except ValueError as e:
         raise SchemaError(str(e)) from e
+    

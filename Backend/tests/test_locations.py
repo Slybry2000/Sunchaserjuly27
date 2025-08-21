@@ -1,6 +1,5 @@
-import pytest
-from utils.geo import haversine_miles, bbox_degrees
-from services.locations import all_locations, nearby
+from Backend.utils.geo import haversine_miles, bbox_degrees
+from Backend.services.locations import all_locations, nearby
 
 def test_haversine_seattle_tacoma():
     # Seattle: 47.6062, -122.3321; Tacoma: 47.2529, -122.4443

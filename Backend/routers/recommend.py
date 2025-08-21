@@ -1,12 +1,13 @@
-import os, json
+import os
+import json
 from fastapi import APIRouter, Query, Request, Depends
-from models.errors import UpstreamError as WeatherError
+from Backend.models.errors import UpstreamError as WeatherError
 from fastapi.responses import JSONResponse
-from models.recommendation import RecommendResponse, Recommendation
-from models.errors import ErrorPayload
-from services.locations import nearby
-from services.scoring import rank
-from utils.etag import strong_etag
+from Backend.models.recommendation import RecommendResponse, Recommendation
+from Backend.models.errors import ErrorPayload
+from Backend.services.locations import nearby
+from Backend.services.scoring import rank
+from Backend.utils.etag import strong_etag_for_obj
 
 router = APIRouter()
 ENABLE_Q = os.getenv("ENABLE_Q","false").lower() == "true"
@@ -82,7 +83,7 @@ async def recommend(
     weather_fetch = get_weather_fn or None
     if weather_fetch is None:
         # default to services.weather.get_weather_cached
-        from services.weather import get_weather_cached as _default_get_weather
+        from Backend.services.weather import get_weather_cached as _default_get_weather
         weather_fetch = _default_get_weather
 
     try:
@@ -114,11 +115,8 @@ async def recommend(
 
     # Compute ETag over the payload excluding volatile fields (generated_at)
     etag_payload = {k: v for k, v in payload.items() if k != "generated_at"}
-    # ensure datetimes are serialized consistently
-    body = json.dumps(etag_payload, default=str, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    # DEBUG: emit canonical payload used for ETag (temporary)
-    # end debug
-    etag = strong_etag(body)
+    # Use the helper that canonicalizes Python objects (stable floats, sorted keys)
+    etag = strong_etag_for_obj(etag_payload)
 
     # If-None-Match support
     # Support If-None-Match with quoted or unquoted ETags, and comma-separated lists

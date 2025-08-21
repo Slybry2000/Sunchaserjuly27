@@ -5,14 +5,26 @@ on: [push, pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      CACHE_REFRESH_SYNC: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Install package (editable)
+        run: |
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            pip install -e .
+          else
+            echo "No pyproject.toml or setup.py found; skipping editable install"
+          fi
       - name: Run ruff check
         run: ruff check .
       - name: Run mypy
-        run: mypy .
+        run: mypy --config-file mypy.ini

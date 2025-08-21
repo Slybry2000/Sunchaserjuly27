@@ -137,17 +137,14 @@ Sample response:
 ## 🧪 Testing
 
 ```bash
-# Run all tests (43/47 passing - production ready)
+# Run all tests (CI now installs dev/test dependencies including pytest-asyncio)
 pytest
-
-# Run tests excluding problematic cache deadlock tests
-pytest -k "not (test_swr_background_refresh or test_stats or test_background_refresh_exception_handling or test_cache_single_flight or slow)"
 
 # Run with verbose output
 pytest -vv
 
-# Run specific test file
-pytest tests/test_recommend_api.py -v
+# Run a single test file
+pytest Backend/tests/test_recommend_api.py -v
 ```
 
 **Current Test Status**: 43/47 tests passing (91% success rate)
@@ -158,6 +155,35 @@ pytest tests/test_recommend_api.py -v
 - ✅ Error handling and observability middleware
 - ✅ Scoring engine and location filtering
 - 🚫 4 tests skipped due to asyncio deadlock edge cases (non-critical)
+
+To run the cache-focused tests locally (they rely on asyncio and the in-process
+refresh synchronization), run:
+
+```powershell
+# Ensure the test env mirrors CI determinism
+$env:CACHE_REFRESH_SYNC = 'true'
+
+# Run the in-process cache unit tests
+pytest Backend/tests/test_cache_inproc.py -q
+
+# Run the cache integration tests that exercise `get_or_set`
+pytest Backend/tests/test_caching.py -q
+```
+
+If you see many skipped coroutines, install `pytest-asyncio` in your test
+env (`pip install pytest-asyncio`) so the async tests execute.
+
+### Developer note: deterministic cache refresh during tests
+
+To make cache background refresh deterministic in tests (mirroring CI), set:
+
+```powershell
+$env:CACHE_REFRESH_SYNC = 'true'
+pytest
+```
+
+The repository includes a `Backend/tests/conftest.py` fixture that automatically
+enables `CACHE_REFRESH_SYNC` for the test session so local runs behave like CI.
 
 ## 🏗️ Architecture
 
@@ -246,3 +272,17 @@ Phase B frontend work in progress:
 - Comprehensive frontend testing with CI
 
 For detailed technical specifications, see `docs/plan_vertical_slice.md`.
+
+## Attribution
+
+You can paste either of the following lines into the README, app footer, or UI:
+
+```
+Weather data provided by Open-Meteo (https://open-meteo.com)
+```
+
+Shorter footer-friendly option:
+
+```
+Weather data © Open-Meteo
+```

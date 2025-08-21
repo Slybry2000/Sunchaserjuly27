@@ -1,11 +1,10 @@
 import os
 import asyncio
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Sequence, Any, cast
 
-from models.recommendation import Recommendation
-from services.weather import get_weather_cached
-from models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
+from Backend.services.weather import get_weather_cached
+from Backend.models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ FANOUT = int(os.getenv("WEATHER_FANOUT_CONCURRENCY", "8"))
 BUDGET = float(os.getenv("REQUEST_BUDGET_MS", "1500")) / 1000.0
 
 
-def first_sunny_block(slots: List[dict], day_start=DAY_S, day_end=DAY_E, cloud_threshold=CLOUD) -> Tuple[Optional[str], int]:
+def first_sunny_block(slots: Sequence[Any], day_start=DAY_S, day_end=DAY_E, cloud_threshold=CLOUD) -> Tuple[Optional[str], int]:
     start_iso: Optional[str] = None
     run = 0
     for s in slots:
@@ -102,16 +101,17 @@ async def rank(origin_lat, origin_lon, candidates: List[dict], *, max_weather=20
     return results
 
 
-async def score_location(loc, weather: dict):
+async def score_location(loc, weather: Any):
     """Score a single Location given raw weather dict (compat test helper).
 
     Returns an object with .score and .best_window attributes for compatibility with tests.
     """
     # parse weather into slots if needed
+    slots: Sequence[Any]
     if isinstance(weather, dict) and "hourly" in weather:
         # reuse parse logic from services.weather if available
         try:
-            from services.weather import parse_weather
+            from Backend.services.weather import parse_weather
 
             slots = parse_weather(weather)
         except Exception:
@@ -121,9 +121,10 @@ async def score_location(loc, weather: dict):
             temps = weather.get("hourly", {}).get("temperature_2m", [])
             slots = []
             for i in range(min(len(times), 48)):
-                slots.append({"ts_local": times[i], "cloud_pct": int(clouds[i]), "temp_f": float(temps[i])})
+                slots.append({"ts_local": times[i], "cloud_pct": int(clouds[i]) if i < len(clouds) else 100, "temp_f": float(temps[i]) if i < len(temps) else 0.0})
     else:
-        slots = weather
+        # `weather` may already be a list/sequence of slot dicts; cast for typing
+        slots = cast(Sequence[Any], weather)
 
     start_iso, duration = first_sunny_block(slots)
     score = score_candidate(0.0, duration, start_iso)

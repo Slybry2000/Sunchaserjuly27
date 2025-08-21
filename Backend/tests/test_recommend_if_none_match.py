@@ -1,13 +1,12 @@
-import json
-from fastapi.testclient import TestClient
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # ensure repo root on path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from Backend.main import app
+from fastapi.testclient import TestClient  # noqa: E402
+from Backend.main import app  # noqa: E402
 
 
 async def fake_weather(lat, lon):
@@ -20,7 +19,7 @@ def test_if_none_match_304():
     client = TestClient(app)
 
     # inject dependency using FastAPI's dependency_overrides (consistent with other tests)
-    from routers.recommend import get_weather_dep
+    from Backend.routers.recommend import get_weather_dep
     app.dependency_overrides[get_weather_dep] = lambda: fake_weather
 
     # first request to get ETag (use larger radius so candidates are found)

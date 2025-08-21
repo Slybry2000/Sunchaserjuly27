@@ -3,16 +3,21 @@
 # Pinned for deterministic CI runs. Review and update pins periodically.
 
 # Linting & formatting
-ruff==0.4.16
+# pinned to a known-available release for CI
+ruff==0.12.9
 
 # Static type checking
 mypy==1.6.1
 
 # Testing
-pytest==7.4.0
-pytest-asyncio==0.21.2
+# NOTE: upgraded pytest and pytest-httpx to a coordinated set that allows
+# pinning httpx/httpcore/h11 for pip-audit remediation without resolver conflicts.
+pytest==8.4.1
+pytest-asyncio==1.1.0
 pytest-cov==4.1.0
-pytest-httpx==0.23.0
+pytest-httpx==0.35.0
+httpx==0.28.1
+httpcore==1.0.9
 freezegun==1.2.2
 
 # Coverage upload
@@ -20,6 +25,10 @@ codecov==2.1.13
 
 # Security audit
 pip-audit==2.3.1
+
+# Explicit pins for transitive deps with known advisories (pin safe minimums)
+# setuptools: fix available in 78.1.1+
+setuptools>=78.1.1
 
 # Optional: HTTP mocking libs (pick one)
 # respx==0.18.0

@@ -10,14 +10,15 @@ development and tests).
 import json
 import os
 from functools import wraps
-from typing import Any, Callable
+from typing import Any, Any as _Any, Callable
 
 try:
-    import redis.asyncio as redis
+    import redis.asyncio as redis  # type: ignore
 except Exception:
-    redis = None
+    redis = None  # type: ignore
 
 import asyncio
+import inspect
 
 from .cache_inproc import cache as _inproc_cache
 
@@ -67,6 +68,10 @@ class CacheClient:
 
 # Choose cache implementation: prefer Redis when configured, else use in-proc
 _use_redis = bool(os.getenv("REDIS_URL") or os.getenv("REDIS_TOKEN")) and redis is not None
+# `cache` may be either a CacheClient or the in-process cache instance; annotate
+# as Any so static typecheckers accept the runtime flexibility.
+
+cache: _Any
 if _use_redis:
     cache = CacheClient()
 else:
@@ -102,6 +107,15 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
                 # Best-effort; don't fail the request
                 pass
             return result
+
+        # Preserve the original function signature so FastAPI can detect parameters
+        try:
+            # use setattr so static checkers (mypy) don't complain about setting
+            # arbitrary attributes on Callable objects
+            setattr(wrapper, "__signature__", inspect.signature(func))
+        except Exception:
+            # best-effort: if signature cannot be set, continue without failing
+            pass
 
         return wrapper
 

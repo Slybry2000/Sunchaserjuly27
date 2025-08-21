@@ -1,4 +1,4 @@
-from utils.geo import haversine, clamp_bbox, normalize_latlon
+from Backend.utils.geo import haversine, clamp_bbox, normalize_latlon
 
 def test_haversine_known_distance():
     # Seattle (47.6062, -122.3321) to Portland (45.5152, -122.6784) ~233km
