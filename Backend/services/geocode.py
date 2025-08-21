@@ -4,6 +4,7 @@ Geocoding service using Mapbox API
 import os
 
 import httpx
+from typing import Mapping, Any
 from models.errors import LocationNotFound
 
 
@@ -25,7 +26,7 @@ async def geocode(query: str) -> tuple[float, float]:
         raise ValueError("MAPBOX_TOKEN environment variable not set")
 
     url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json"
-    params = {
+    params: Mapping[str, Any] = {
         "access_token": mapbox_token,
         "limit": 1
     }

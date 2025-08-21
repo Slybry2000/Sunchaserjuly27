@@ -13,9 +13,9 @@ from functools import wraps
 from typing import Any, Callable
 
 try:
-    import redis.asyncio as redis
+    import redis.asyncio as redis  # type: ignore
 except Exception:
-    redis = None
+    redis = None  # type: ignore
 
 import asyncio
 
@@ -67,6 +67,11 @@ class CacheClient:
 
 # Choose cache implementation: prefer Redis when configured, else use in-proc
 _use_redis = bool(os.getenv("REDIS_URL") or os.getenv("REDIS_TOKEN")) and redis is not None
+# `cache` may be either a CacheClient or the in-process cache instance; annotate
+# as Any so static typecheckers accept the runtime flexibility.
+from typing import Any as _Any
+
+cache: _Any
 if _use_redis:
     cache = CacheClient()
 else:
