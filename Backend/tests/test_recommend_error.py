@@ -1,9 +1,9 @@
 from fastapi.testclient import TestClient
-from main import app
+from Backend.main import app
 
-from services.weather import WeatherError
+from Backend.services.weather import WeatherError
 
-from routers.recommend import get_weather_dep
+from Backend.routers.recommend import get_weather_dep
 
 def test_recommend_weather_error():
     # Dependency override for get_weather

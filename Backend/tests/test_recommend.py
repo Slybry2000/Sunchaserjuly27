@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from main import app
-import routers.recommend as recommend_module
+import Backend.routers.recommend as recommend_module
 
 def test_recommend_happy(monkeypatch):
     client = TestClient(app)

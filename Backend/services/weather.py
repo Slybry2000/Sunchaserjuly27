@@ -4,7 +4,7 @@ from tenacity import retry, stop_after_attempt, wait_random, before_sleep_log
 from typing import TypedDict, List, Tuple
 import httpx
 from utils.cache_inproc import InProcessCache
-from models.errors import UpstreamError
+from Backend.models.errors import UpstreamError
 
 # Backwards-compatible alias expected by some tests
 class WeatherError(UpstreamError):

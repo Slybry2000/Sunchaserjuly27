@@ -1,6 +1,6 @@
 import pytest
-from models.recommendation import Location
-from services.scoring import score_location
+from Backend.models.recommendation import Location
+from Backend.services.scoring import score_location
 
 @pytest.mark.asyncio
 async def test_score_location_sunny():

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from services.geocode import LocationNotFound, geocode
+from Backend.services.geocode import LocationNotFound, geocode
 
 
 @pytest.mark.asyncio

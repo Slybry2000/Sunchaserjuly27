@@ -5,7 +5,7 @@ import os
 
 import httpx
 from typing import Mapping, Any
-from models.errors import LocationNotFound
+from Backend.models.errors import LocationNotFound
 
 
 async def geocode(query: str) -> tuple[float, float]:

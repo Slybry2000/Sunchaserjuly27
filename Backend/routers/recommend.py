@@ -1,12 +1,12 @@
 import os
 import json
 from fastapi import APIRouter, Query, Request, Depends
-from models.errors import UpstreamError as WeatherError
+from Backend.models.errors import UpstreamError as WeatherError
 from fastapi.responses import JSONResponse
-from models.recommendation import RecommendResponse, Recommendation
-from models.errors import ErrorPayload
-from services.locations import nearby
-from services.scoring import rank
+from Backend.models.recommendation import RecommendResponse, Recommendation
+from Backend.models.errors import ErrorPayload
+from Backend.services.locations import nearby
+from Backend.services.scoring import rank
 from Backend.utils.etag import strong_etag_for_obj
 
 router = APIRouter()

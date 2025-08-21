@@ -3,8 +3,8 @@ import asyncio
 import logging
 from typing import List, Tuple, Optional
 
-from services.weather import get_weather_cached
-from models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
+from Backend.services.weather import get_weather_cached
+from Backend.models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
 
 logger = logging.getLogger(__name__)
 

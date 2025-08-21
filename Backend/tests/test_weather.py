@@ -1,5 +1,5 @@
 import pytest
-from services.weather import get_weather
+from Backend.services.weather import get_weather
 
 @pytest.mark.asyncio
 async def test_get_weather(monkeypatch):

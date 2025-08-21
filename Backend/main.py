@@ -1,13 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Query, Request
-from services.geocode import geocode
-from utils.cache import cached
-from services.http import get_http_client, close_http_client
-from middleware.observability import ObservabilityMiddleware
-from routers.recommend import router as recommend_router
-from routers.internal import router as internal_router
-from routers.forecasts import router as forecasts_router
-from models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
+from Backend.services.geocode import geocode
+from Backend.utils.cache import cached
+from Backend.services.http import get_http_client, close_http_client
+from Backend.middleware.observability import ObservabilityMiddleware
+from Backend.routers.recommend import router as recommend_router
+from Backend.routers.internal import router as internal_router
+from Backend.routers.forecasts import router as forecasts_router
+from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
 from fastapi.responses import JSONResponse
 
 @asynccontextmanager
