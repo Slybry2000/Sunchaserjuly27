@@ -15,4 +15,4 @@ jobs:
       - name: Run ruff check
         run: ruff check .
       - name: Run mypy
-        run: mypy --explicit-package-bases Backend=. .
+        run: mypy --explicit-package-bases='Backend=.' .
