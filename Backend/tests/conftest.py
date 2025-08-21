@@ -5,7 +5,7 @@ import pytest
 # Explicitly import pytest_asyncio to guarantee the plugin is registered
 # in environments where pytest's plugin discovery may not run early enough.
 try:
-    import pytest_asyncio  # type: ignore
+    pass  # type: ignore
 except Exception:
     # best-effort: if import fails, plugin may still be available via entrypoints
     pass

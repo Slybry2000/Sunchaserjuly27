@@ -1,9 +1,7 @@
 from fastapi.testclient import TestClient
 from main import app
 
-import pytest
 from services.weather import WeatherError
-from fastapi.testclient import TestClient
 
 from routers.recommend import get_weather_dep
 

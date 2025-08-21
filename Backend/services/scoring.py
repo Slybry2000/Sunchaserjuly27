@@ -3,7 +3,6 @@ import asyncio
 import logging
 from typing import List, Tuple, Optional
 
-from models.recommendation import Recommendation
 from services.weather import get_weather_cached
 from models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
 

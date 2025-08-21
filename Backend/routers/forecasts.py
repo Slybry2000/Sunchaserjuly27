@@ -5,7 +5,7 @@ import sqlite3
 from typing import List, Dict, Optional
 
 from utils.geo import haversine_miles
-from utils.etag import strong_etag, strong_etag_for_obj
+from utils.etag import strong_etag_for_obj
 
 router = APIRouter()
 

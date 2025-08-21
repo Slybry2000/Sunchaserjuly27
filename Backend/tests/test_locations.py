@@ -1,4 +1,3 @@
-import pytest
 from utils.geo import haversine_miles, bbox_degrees
 from services.locations import all_locations, nearby
 

@@ -4,7 +4,7 @@ import csv
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from services.weather import get_weather_cached, parse_weather
+from services.weather import get_weather_cached
 
 DATA_DIR = Path(__file__).resolve().parents[1] / 'data'
 PNW_CSV = DATA_DIR / 'pnw.csv'

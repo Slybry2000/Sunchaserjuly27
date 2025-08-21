@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, Query, Request
 from services.geocode import geocode
 from utils.cache import cached
 from services.http import get_http_client, close_http_client
@@ -74,7 +74,7 @@ async def geocode_endpoint(q: str = Query(..., description="Location query (e.g.
             "lat": lat,
             "lon": lon
         }
-    except LocationNotFound as e:
+    except LocationNotFound:
         raise
     except ValueError as e:
         raise SchemaError(str(e)) from e

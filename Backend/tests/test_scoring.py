@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from models.recommendation import Location
 from services.scoring import score_location
 

@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from services.weather import get_weather
 
 @pytest.mark.asyncio

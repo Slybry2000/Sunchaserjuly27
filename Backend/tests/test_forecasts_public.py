@@ -1,4 +1,3 @@
-from fastapi.testclient import TestClient
 import sys
 from pathlib import Path
 
@@ -6,7 +5,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from Backend.main import app
+from fastapi.testclient import TestClient  # noqa: E402
+from Backend.main import app  # noqa: E402
 
 
 def test_forecasts_public_endpoint():

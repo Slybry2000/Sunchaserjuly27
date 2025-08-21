@@ -1,4 +1,5 @@
-import os, json
+import os
+import json
 from fastapi import APIRouter, Query, Request, Depends
 from models.errors import UpstreamError as WeatherError
 from fastapi.responses import JSONResponse
@@ -6,7 +7,7 @@ from models.recommendation import RecommendResponse, Recommendation
 from models.errors import ErrorPayload
 from services.locations import nearby
 from services.scoring import rank
-from utils.etag import strong_etag, strong_etag_for_obj
+from utils.etag import strong_etag_for_obj
 
 router = APIRouter()
 ENABLE_Q = os.getenv("ENABLE_Q","false").lower() == "true"
