@@ -160,3 +160,6 @@ cython_debug/
 #  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
 #  project, it is not recommended to check the project's .idea/ directory into version control.
 .idea/
+
+# Ignore temporary per-check run virtualenv created by pin testing
+.tmp-pin-test/
