@@ -1,12 +1,20 @@
-"""Top-level shim package for utils re-exporting Backend.utils
+"""Top-level shim package for utils re-exporting Backend.utils.
 
-This allows code that imports `utils.foo` to resolve to `Backend.utils.foo`
-for tools like mypy and for CI type checking.
+Forwards attribute access to Backend.utils with no star-imports.
 """
-from importlib import import_module as _im
+from importlib import import_module as _import_module
+from types import ModuleType
+from typing import Any
 
-_backend_utils = _im("Backend.utils")
+_backend_utils: ModuleType = _import_module("Backend.utils")
 
-from Backend.utils import *  # re-export everything
+
+def __getattr__(name: str) -> Any:  # pragma: no cover - thin shim
+	return getattr(_backend_utils, name)
+
+
+def __dir__() -> list[str]:  # pragma: no cover - thin shim
+	return list(getattr(_backend_utils, "__all__", [])) + [n for n in dir(_backend_utils) if not n.startswith("_")]
+
 
 __all__ = getattr(_backend_utils, "__all__", [])

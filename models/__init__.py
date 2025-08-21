@@ -1,12 +1,20 @@
-"""Top-level shim package for models re-exporting Backend.models
+"""Top-level shim package for models re-exporting Backend.models.
 
-This allows code that imports `models.foo` to resolve to `Backend.models.foo`
-for tools like mypy and for CI type checking.
+Attribute access is forwarded to the Backend package; avoids star-imports.
 """
-from importlib import import_module as _im
+from importlib import import_module as _import_module
+from types import ModuleType
+from typing import Any
 
-_backend_models = _im("Backend.models")
+_backend_models: ModuleType = _import_module("Backend.models")
 
-from Backend.models import *  # re-export everything
+
+def __getattr__(name: str) -> Any:  # pragma: no cover - thin shim
+	return getattr(_backend_models, name)
+
+
+def __dir__() -> list[str]:  # pragma: no cover - thin shim
+	return list(getattr(_backend_models, "__all__", [])) + [n for n in dir(_backend_models) if not n.startswith("_")]
+
 
 __all__ = getattr(_backend_models, "__all__", [])

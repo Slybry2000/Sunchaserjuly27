@@ -10,7 +10,7 @@ development and tests).
 import json
 import os
 from functools import wraps
-from typing import Any, Callable
+from typing import Any, Any as _Any, Callable
 
 try:
     import redis.asyncio as redis  # type: ignore
@@ -69,7 +69,6 @@ class CacheClient:
 _use_redis = bool(os.getenv("REDIS_URL") or os.getenv("REDIS_TOKEN")) and redis is not None
 # `cache` may be either a CacheClient or the in-process cache instance; annotate
 # as Any so static typecheckers accept the runtime flexibility.
-from typing import Any as _Any
 
 cache: _Any
 if _use_redis:

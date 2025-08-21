@@ -1,12 +1,20 @@
-"""Top-level shim package for middleware re-exporting Backend.middleware
+"""Top-level shim package for middleware re-exporting Backend.middleware.
 
-This allows code that imports `middleware.foo` to resolve to `Backend.middleware.foo`
-for tools like mypy and for CI type checking.
+Forwards attribute access to Backend.middleware.
 """
-from importlib import import_module as _im
+from importlib import import_module as _import_module
+from types import ModuleType
+from typing import Any
 
-_backend_middleware = _im("Backend.middleware")
+_backend_middleware: ModuleType = _import_module("Backend.middleware")
 
-from Backend.middleware import *  # re-export everything
+
+def __getattr__(name: str) -> Any:  # pragma: no cover - thin shim
+	return getattr(_backend_middleware, name)
+
+
+def __dir__() -> list[str]:  # pragma: no cover - thin shim
+	return list(getattr(_backend_middleware, "__all__", [])) + [n for n in dir(_backend_middleware) if not n.startswith("_")]
+
 
 __all__ = getattr(_backend_middleware, "__all__", [])
