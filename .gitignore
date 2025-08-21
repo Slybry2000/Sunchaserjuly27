@@ -163,3 +163,14 @@ cython_debug/
 
 # Ignore temporary per-check run virtualenv created by pin testing
 .tmp-pin-test/
+
+# Local env files and editor folders
+.env.local
+.env.*.local
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
