@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 from functools import lru_cache
 import heapq
-from utils.geo import haversine_miles, bbox_degrees
+from Backend.utils.geo import haversine_miles, bbox_degrees
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "pnw.csv"
 

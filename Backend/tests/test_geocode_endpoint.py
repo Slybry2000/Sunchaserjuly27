@@ -27,7 +27,7 @@ def test_geocode_endpoint_success():
 def test_geocode_endpoint_not_found():
     """Test geocoding endpoint with location not found"""
     with patch('main.geocode') as mock_geocode:
-        from services.geocode import LocationNotFound
+        from Backend.services.geocode import LocationNotFound
         mock_geocode.side_effect = LocationNotFound("No location found")
 
         response = client.get("/geocode?q=nonexistent")

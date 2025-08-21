@@ -4,7 +4,7 @@ import json
 import sqlite3
 from typing import List, Dict, Optional
 
-from utils.geo import haversine_miles
+from Backend.utils.geo import haversine_miles
 
 router = APIRouter()
 

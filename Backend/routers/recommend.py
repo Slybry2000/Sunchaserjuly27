@@ -83,7 +83,7 @@ async def recommend(
     weather_fetch = get_weather_fn or None
     if weather_fetch is None:
         # default to services.weather.get_weather_cached
-        from services.weather import get_weather_cached as _default_get_weather
+        from Backend.services.weather import get_weather_cached as _default_get_weather
         weather_fetch = _default_get_weather
 
     try:

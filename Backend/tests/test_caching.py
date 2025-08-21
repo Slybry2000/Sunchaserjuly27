@@ -1,7 +1,7 @@
 import pytest
 import asyncio
-from utils.cache import get_or_set
-from utils.cache_inproc import cache as _global_inproc_cache
+from Backend.utils.cache import get_or_set
+from Backend.utils.cache_inproc import cache as _global_inproc_cache
 
 
 @pytest.fixture(autouse=True)

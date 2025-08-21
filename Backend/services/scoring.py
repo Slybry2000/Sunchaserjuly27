@@ -110,7 +110,7 @@ async def score_location(loc, weather: dict):
     if isinstance(weather, dict) and "hourly" in weather:
         # reuse parse logic from services.weather if available
         try:
-            from services.weather import parse_weather
+            from Backend.services.weather import parse_weather
 
             slots = parse_weather(weather)
         except Exception:

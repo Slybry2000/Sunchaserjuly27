@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import AsyncMock, Mock
 from freezegun import freeze_time
 
-from utils.cache_inproc import InProcessCache, CacheEntry
+from Backend.utils.cache_inproc import InProcessCache, CacheEntry
 
 
 class TestCacheEntry:

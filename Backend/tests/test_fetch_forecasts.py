@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import pytest
 
-from services.weather import parse_weather
+from Backend.services.weather import parse_weather
 
 FIXTURE_DIR = Path(__file__).resolve().parent / 'fixtures'
 FIXTURE = FIXTURE_DIR / 'open_meteo_hourly.json'

@@ -5,7 +5,7 @@ sys.path.insert(0, str(ROOT))
 
 from fastapi.testclient import TestClient  # noqa: E402
 from Backend.main import app  # noqa: E402
-from routers.recommend import get_weather_dep  # noqa: E402
+from Backend.routers.recommend import get_weather_dep  # noqa: E402
 
 async def fake_weather(lat, lon):
     slots = [{'ts_local': f'2025-08-18T{str(i).zfill(2)}:00', 'cloud_pct': 10, 'temp_f': 65} for i in range(24)]

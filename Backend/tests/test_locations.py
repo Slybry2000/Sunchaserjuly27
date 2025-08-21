@@ -1,4 +1,4 @@
-from utils.geo import haversine_miles, bbox_degrees
+from Backend.utils.geo import haversine_miles, bbox_degrees
 from Backend.services.locations import all_locations, nearby
 
 def test_haversine_seattle_tacoma():
