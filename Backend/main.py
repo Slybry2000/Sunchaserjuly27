@@ -9,7 +9,7 @@ from Backend.routers.recommend import router as recommend_router
 from Backend.routers.internal import router as internal_router
 from Backend.routers.forecasts import router as forecasts_router
 from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
-from fastapi.responses import JSONResponse
+
 import os
 import logging
 from fastapi.middleware.cors import CORSMiddleware
