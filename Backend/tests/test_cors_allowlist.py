@@ -1,6 +1,5 @@
 import importlib
 import logging
-import os
 
 from fastapi.testclient import TestClient
 
@@ -42,4 +41,5 @@ def test_cors_logs_rejected_origin(monkeypatch, caplog):
 
     # Check that the warning log was recorded
     messages = [r.getMessage() for r in caplog.records]
-    assert any('Rejected CORS origin=' in m for m in messages)
+    # Log message was changed to a structured-ish message 'Rejected CORS origin'
+    assert any('Rejected CORS origin' in m for m in messages)
