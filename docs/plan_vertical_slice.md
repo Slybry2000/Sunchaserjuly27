@@ -27,6 +27,11 @@
 
 Actionable next steps (short term):
 
+**Immediate next task (today)**
+
+* 🟡 Monitor GitHub Actions for PR #7 (`feature/cors-hardening`) and triage the `analyze-and-test` Flutter job; if failures appear, fetch logs and apply minimal fixes (lint/typing or dependency resolution). Expected owner: backend/frontend on-call.
+
+
 * Sprint 1 — Forecast Data Engine (in progress → implemented): a fetch job and snapshot writer were added on branch `sprint-1-data-engine` (`Backend/scripts/fetch_forecasts.py`). Snapshot persistence to SQLite was implemented and a public, lightweight API endpoint `GET /forecasts` was added for frontend consumption; the JSON snapshot remains as a fallback.
 * ✅ Implemented conditional requests (`If-None-Match` → `304`) in `routers/recommend.py` and added tests for invariance and 304 behavior (Phase B completion).
 * Dataset expansion: grow `data/pnw.csv` to ≥100 rows and add `category` column; run `scripts/validate_dataset.py` and add tests for expanded schema.
@@ -45,7 +50,7 @@ Short status (delta):
 * ✅ FastAPI lifespan migration complete: removed deprecated `@app.on_event` hooks; shared HTTP client is now initialized/cleaned up via lifespan (no warnings in tests).
 * ✅ Error mapping tests added: `UpstreamError→502`, `LocationNotFound→404`, `TimeoutBudgetExceeded→504` all covered and passing.
 
-Next immediate action: continue Phase B by hardening cache refresh behavior, re-enabling the skipped cache tests in CI, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
+Next immediate action: continue Phase B by hardening cache refresh behavior, re-enabling the skipped cache tests in CI, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; in parallel, monitor the pushed Flutter CI workflow (pinned to `flutter-version: 3.20.0`) and triage any analyzer/test/build failures reported by GitHub Actions.
 
 Recent progress (delta):
 
@@ -60,7 +65,7 @@ Next short steps:
 
 **Audience:** Backend · Mobile · DevOps
 **Owner:** (assign)
-**Date:** 2025‑08‑12
+**Date:** 2025‑08‑21
 **Source of truth for `/recommend` and follow‑on work**
 
 ---
@@ -653,8 +658,9 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
    * [x] Harden CORS enforcement tests and add a small integration test that simulates disallowed Origin behavior. (`Backend/tests/test_cors_allowlist.py` added)
     * [x] Push branch and validate GitHub Actions CI (analyze, tests, web build) — branch `feature/cors-hardening` pushed to origin and CI runs triggered.
     * [x] Create a Pull Request for `feature/cors-hardening` and monitor CI runs (PR #7 opened: https://github.com/Slybry2000/Sunchaserjuly27/pull/7).
-    * [x] Commit & push lint fix: removed unused import in `Backend/tests/test_cors_allowlist.py` to satisfy ruff (F401); pushed to `feature/cors-hardening` which retriggered CI.
-    * [ ] Investigate and fix any remaining CI failures (priority: Flutter CI analyze/test/build failures).
+   * [x] Commit & push lint fix: removed unused import in `Backend/tests/test_cors_allowlist.py` to satisfy ruff (F401); pushed to `feature/cors-hardening` which retriggered CI.
+   * [x] Fix Flutter CI workflow inputs: removed conflicting `channel` input and pinned `flutter-version: '3.20.0'`; enabled pub-cache. Changes pushed to `feature/cors-hardening` and CI rerun triggered.
+   * 🟡 In progress: monitor Flutter CI run and triage any analyzer/test/build failures if they appear; local Frontend `flutter analyze` and `flutter test` passed with no issues.
    * [x] Add optional CORS enforcement flag `CORS_ENFORCE` to return 403 for disallowed origins (default: off). Update: `Backend/main.py` supports `CORS_ENFORCE=true|1|yes` to enable enforcement.
    * [x] Re-enable the remaining 4 skipped cache tests in CI now that `CACHE_REFRESH_SYNC=true` is set in the test job — backend test suite (60 tests) ran successfully locally and CI reports green for the pushed branch.
 
@@ -969,3 +975,5 @@ Ensure backend dev server is running; for web, configure CORS to allow the dev o
 
 - Key cache by canonical query (lat,lon,radius) alongside ETag.
 - Prefer revalidation (ETag/304) over TTL guessing; evict on schema version change.
+
+<!-- ci: trigger -->
