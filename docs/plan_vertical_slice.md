@@ -29,7 +29,7 @@ Actionable next steps (short term):
 
 **Immediate next task (today)**
 
-* 🟡 Monitor GitHub Actions for PR #7 (`feature/cors-hardening`) and triage the `analyze-and-test` Flutter job; if failures appear, fetch logs and apply minimal fixes (lint/typing or dependency resolution). Expected owner: backend/frontend on-call.
+* ✅ Monitor GitHub Actions for PR #7 (`feature/cors-hardening`) and triage the `analyze-and-test` Flutter job; triage performed, analyzer issues fixed (accidental Markdown fences removed) and local tests confirmed. Next: wait for CI to finish and merge on green. Owner: backend/frontend on-call.
 
 
 * Sprint 1 — Forecast Data Engine (in progress → implemented): a fetch job and snapshot writer were added on branch `sprint-1-data-engine` (`Backend/scripts/fetch_forecasts.py`). Snapshot persistence to SQLite was implemented and a public, lightweight API endpoint `GET /forecasts` was added for frontend consumption; the JSON snapshot remains as a fallback.
@@ -668,6 +668,13 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
 
    * Local `flutter test` run: ApiClient tests passed locally (see `Frontend/test/api_client_test.dart`).
 
+Immediate stabilization checklist (next actions):
+
+* [ ] Wait for GitHub Actions runs for PR #7 to finish; capture any failing job logs and triage.
+* [ ] If Flutter analyzer/test fails in CI, reproduce locally (`flutter analyze`, `flutter test`) and push minimal fixes.
+* [ ] On green, merge PR #7 and perform a quick staging smoke test (or local docker smoke) verifying CORS allowlist and ETag behavior.
+
+
 ### 20.2 Phase C – Deploy & Security Lite
 
 * [ ] Artifact Registry + Cloud Run deploy (manual first)
@@ -977,3 +984,5 @@ Ensure backend dev server is running; for web, configure CORS to allow the dev o
 - Prefer revalidation (ETag/304) over TTL guessing; evict on schema version change.
 
 <!-- ci: trigger -->
+
+<!-- ci-trigger: 2025-08-21T00:00:00Z - trigger for updated frontend fixes -->
