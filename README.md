@@ -185,6 +185,12 @@ pytest
 The repository includes a `Backend/tests/conftest.py` fixture that automatically
 enables `CACHE_REFRESH_SYNC` for the test session so local runs behave like CI.
 
+Note: the `Backend/tests/conftest.py` file sets `CACHE_REFRESH_SYNC=true` as an
+autouse, session-scoped fixture and reloads the in-process cache module so test
+runs are deterministic by default when running the backend test suite. You can
+override this behavior in your shell if you need to test the asynchronous
+background refresh logic manually.
+
 ## 🏗️ Architecture
 
 ### Current Implementation (Phase B Backend Complete)

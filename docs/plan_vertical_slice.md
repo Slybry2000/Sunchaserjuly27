@@ -28,7 +28,7 @@
 Actionable next steps (short term):
 
 * Sprint 1 — Forecast Data Engine (in progress → implemented): a fetch job and snapshot writer were added on branch `sprint-1-data-engine` (`Backend/scripts/fetch_forecasts.py`). Snapshot persistence to SQLite was implemented and a public, lightweight API endpoint `GET /forecasts` was added for frontend consumption; the JSON snapshot remains as a fallback.
-* Implement conditional requests (`If-None-Match` → `304`) in `routers/recommend.py` and add tests for invariance and 304 behavior (Phase B completion).
+* ✅ Implemented conditional requests (`If-None-Match` → `304`) in `routers/recommend.py` and added tests for invariance and 304 behavior (Phase B completion).
 * Dataset expansion: grow `data/pnw.csv` to ≥100 rows and add `category` column; run `scripts/validate_dataset.py` and add tests for expanded schema.
 * Cache unification & stability (in progress): `utils/cache.py` was updated to prefer the in-process implementation when Redis is not configured and to provide a unified `cached` decorator and `get_or_set` abstraction. Remaining work: remove legacy Redis paths where not needed, run the 4 previously skipped cache tests, and harden background refresh error handling.
 * Frontend work (parallel): implement typed Dart models, `ApiClient.recommend(...)`, and ETag revalidation UI flow (see Issue #3 for the UI MVP). The public `/forecasts` endpoint can be used by the frontend for a lightweight snapshot view.
@@ -45,7 +45,7 @@ Short status (delta):
 * ✅ FastAPI lifespan migration complete: removed deprecated `@app.on_event` hooks; shared HTTP client is now initialized/cleaned up via lifespan (no warnings in tests).
 * ✅ Error mapping tests added: `UpstreamError→502`, `LocationNotFound→404`, `TimeoutBudgetExceeded→504` all covered and passing.
 
-Next immediate action: continue Phase B by hardening cache refresh behavior, tightening ETag canonicalization (completed), re-enabling the skipped cache tests, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
+Next immediate action: continue Phase B by hardening cache refresh behavior, re-enabling the skipped cache tests in CI, and adding one targeted frontend-facing test for `/forecasts` ETag/304 behavior; I can implement these next.
 
 Recent progress (delta):
 
@@ -54,9 +54,9 @@ Recent progress (delta):
 
 Next short steps:
 
-* Add a `pytest` fixture to set `CACHE_REFRESH_SYNC=true` for local deterministic cache tests and re-enable the four previously skipped cache tests.
-* Add a short note in `README.md` describing `CACHE_REFRESH_SYNC` and local test guidance.
-* Add/expand invariance tests for ETag (freeze generated timestamps and validate stable ETag for identical inputs).
+* ✅ Added a `pytest` fixture (`Backend/tests/conftest.py`) that sets `CACHE_REFRESH_SYNC=true` for deterministic cache refresh during tests; skipped cache tests have been prepared for re-enablement.
+* ✅ README updated with `CACHE_REFRESH_SYNC` guidance for local testing (PowerShell examples included).
+* ✅ Expanded invariance tests for ETag (freezing generated timestamps and validating stable ETag for identical inputs); focused If-None-Match tests added for `/recommend` and `/forecasts`.
 
 **Audience:** Backend · Mobile · DevOps
 **Owner:** (assign)
@@ -613,11 +613,49 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
 7. **Frontend Layer (overlaps Phase B)**
 
    * [ ] Define `API_BASE_URL` config and flavors (dev/staging/prod)
-   * [ ] Implement typed Dart models for v1 `RecommendResponse`
-   * [ ] Create `ApiClient.recommend(lat, lon, radius)` with timeout and error mapping
-   * [ ] Add ETag storage per query; send `If-None-Match`; on 304 serve cached body
-   * [ ] Minimal screen: fetch and render top‑N recommendations
-   * [ ] Frontend tests: models, client, widget states; contract test vs fixture(s)
+   * [x] Implement typed Dart models for v1 `RecommendResponse`
+   * [x] Create `ApiClient.recommend(lat, lon, radius)` with timeout and error mapping
+   * [x] Add ETag storage per query; send `If-None-Match`; on 304 serve cached body
+   * [x] Minimal screen: fetch and render top‑N recommendations (DataService now wired to ApiClient)
+   * [x] Frontend tests: models, client, widget states; contract test vs fixture(s)
+
+   Completed in this sprint:
+
+   * Api client + persistent ETag revalidation implemented (`frontend/lib/services/api_client.dart`).
+   * Dart models for `RecommendResponse` added (`frontend/lib/models/recommend_response.dart`).
+   * `DataService` wired to call the backend and map `RecommendResponse` → `SunshineSpot` (fallback to local samples).
+   * Resilient image loading added (`errorBuilder` in `sunshine_spot_card.dart`) and picsum placeholders used to avoid broken hotlinks.
+   * Pubspec dependency conflict resolved (upgraded `http` to `^1.0.0`) and analyzer warning fixed.
+
+   Next suggested tasks (short, actionable):
+
+   * [x] Add unit tests for `ApiClient` to verify ETag storage, 200→store and 304→use-cached logic (mock HTTP responses). — Tests added and passed locally.
+   * [x] Add a Flutter CI job (analyze + test; optional `build web` smoke) and run the client tests in CI. — Workflow added at `/.github/workflows/flutter-ci.yml`.
+   * [x] Add a short README note for frontend devs showing how to run with `--dart-define=API_BASE_URL` and emulator host mapping. — `Frontend/README.md` added.
+   * [x] Replace picsum placeholder with a bundled asset fallback and add a small placeholder asset to `assets/` so offline builds show a nicer image. — `Frontend/assets/placeholder.png` added and wired.
+   * [x] For web dev, ensure backend CORS includes localhost dev origin or run the backend with a dev CORS flag (`DEV_ALLOW_CORS`) documented in README. — `DEV_ALLOW_CORS` flag implemented in `Backend/main.py` to enable permissive CORS for dev.
+
+   Next backend task started:
+
+   * [x] Harden CORS policy for staging/prod (allowlist only; log configured origins). — Added `CORS_ALLOWED_ORIGINS` env var support and structured logging in `Backend/main.py`.
+
+   Notes:
+
+   * `DEV_ALLOW_CORS` still enables permissive CORS for local dev (true/1/yes).
+   * `CORS_ALLOWED_ORIGINS` accepts a comma-separated list of allowed origins for staging/prod.
+
+   Recent work:
+
+   * [x] Added lightweight middleware to log requests with an Origin header not on the allowlist. This surfaces rejected-origin attempts in server logs for auditing.
+
+   Next steps:
+
+   * [x] Harden CORS enforcement tests and add a small integration test that simulates disallowed Origin behavior. (`Backend/tests/test_cors_allowlist.py` added)
+   * [ ] Push branch and validate GitHub Actions CI (analyze, tests, web build).
+
+   Completed in CI prep:
+
+   * Local `flutter test` run: ApiClient tests passed locally (see `Frontend/test/api_client_test.dart`).
 
 ### 20.2 Phase C – Deploy & Security Lite
 

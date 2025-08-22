@@ -10,6 +10,9 @@ from Backend.routers.internal import router as internal_router
 from Backend.routers.forecasts import router as forecasts_router
 from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
 from fastapi.responses import JSONResponse
+import os
+import logging
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +31,53 @@ app.include_router(forecasts_router)
 
 # Add observability middleware
 app.add_middleware(cast(_Any, ObservabilityMiddleware))
+
+# CORS configuration
+logger = logging.getLogger('sunshine_backend')
+dev_allow = os.environ.get('DEV_ALLOW_CORS', '').lower() in ('1', 'true', 'yes')
+cors_allowed = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
+
+if dev_allow:
+    # Permissive CORS for local development/debugging
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    logger.info('DEV_ALLOW_CORS enabled: permissive CORS (allow_origins=*)')
+elif cors_allowed:
+    # Normalize origins (strip whitespace and trailing slash) for comparison
+    origins = [o.strip().rstrip('/') for o in cors_allowed.split(',') if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+    logger.info('CORS allowlist configured: %s', origins)
+
+    # Add lightweight logging middleware to record rejected origins. This does
+    # not change browser CORS behavior (CORSMiddleware still controls headers),
+    # but it surfaces attempts from disallowed origins in the server logs for
+    # auditing and incident response.
+    @app.middleware("http")
+    async def cors_rejected_logging_middleware(request: Request, call_next):
+        origin = request.headers.get('origin')
+        if origin:
+            norm = origin.rstrip('/')
+            if norm not in origins:
+                client = request.client.host if request.client else 'unknown'
+                logger.warning(
+                    'Rejected CORS origin=%s path=%s method=%s client=%s',
+                    origin,
+                    request.url.path,
+                    request.method,
+                    client,
+                )
+        return await call_next(request)
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
