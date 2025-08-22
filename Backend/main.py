@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 import os
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,7 +41,7 @@ cors_allowed = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
 if dev_allow:
     # Permissive CORS for local development/debugging
     app.add_middleware(
-        CORSMiddleware,
+        cast(_Any, CORSMiddleware),
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
@@ -51,7 +52,7 @@ elif cors_allowed:
     # Normalize origins (strip whitespace and trailing slash) for comparison
     origins = [o.strip().rstrip('/') for o in cors_allowed.split(',') if o.strip()]
     app.add_middleware(
-        CORSMiddleware,
+        cast(_Any, CORSMiddleware),
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -63,6 +64,9 @@ elif cors_allowed:
     # not change browser CORS behavior (CORSMiddleware still controls headers),
     # but it surfaces attempts from disallowed origins in the server logs for
     # auditing and incident response.
+    # Optional enforcement: when true, respond with 403 for disallowed origins
+    cors_enforce = os.environ.get('CORS_ENFORCE', '').lower() in ('1', 'true', 'yes')
+
     @app.middleware("http")
     async def cors_rejected_logging_middleware(request: Request, call_next):
         origin = request.headers.get('origin')
@@ -70,13 +74,24 @@ elif cors_allowed:
             norm = origin.rstrip('/')
             if norm not in origins:
                 client = request.client.host if request.client else 'unknown'
+                # Structured-ish log fields for easier parsing in log sinks
                 logger.warning(
-                    'Rejected CORS origin=%s path=%s method=%s client=%s',
-                    origin,
-                    request.url.path,
-                    request.method,
-                    client,
+                    'Rejected CORS origin', extra={
+                        'origin': origin,
+                        'path': request.url.path,
+                        'method': request.method,
+                        'client': client,
+                    }
                 )
+                if cors_enforce:
+                    # Return a JSON error payload for disallowed origins when enforcement enabled
+                    return JSONResponse(
+                        status_code=403,
+                        content={
+                            'error': 'cors_forbidden',
+                            'detail': f'Origin {origin} not allowed',
+                        },
+                    )
         return await call_next(request)
 
 # Exception handlers for error taxonomy

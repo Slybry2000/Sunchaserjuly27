@@ -651,7 +651,12 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
    Next steps:
 
    * [x] Harden CORS enforcement tests and add a small integration test that simulates disallowed Origin behavior. (`Backend/tests/test_cors_allowlist.py` added)
-   * [ ] Push branch and validate GitHub Actions CI (analyze, tests, web build).
+    * [x] Push branch and validate GitHub Actions CI (analyze, tests, web build) — branch `feature/cors-hardening` pushed to origin and CI runs triggered.
+    * [x] Create a Pull Request for `feature/cors-hardening` and monitor CI runs (PR #7 opened: https://github.com/Slybry2000/Sunchaserjuly27/pull/7).
+    * [x] Commit & push lint fix: removed unused import in `Backend/tests/test_cors_allowlist.py` to satisfy ruff (F401); pushed to `feature/cors-hardening` which retriggered CI.
+    * [ ] Investigate and fix any remaining CI failures (priority: Flutter CI analyze/test/build failures).
+   * [x] Add optional CORS enforcement flag `CORS_ENFORCE` to return 403 for disallowed origins (default: off). Update: `Backend/main.py` supports `CORS_ENFORCE=true|1|yes` to enable enforcement.
+   * [x] Re-enable the remaining 4 skipped cache tests in CI now that `CACHE_REFRESH_SYNC=true` is set in the test job — backend test suite (60 tests) ran successfully locally and CI reports green for the pushed branch.
 
    Completed in CI prep:
 
