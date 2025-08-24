@@ -10,10 +10,8 @@ deployments where in-process caching provides better performance and
 reduced complexity.
 """
 
-import os
 from functools import wraps
 from typing import Any, Callable
-import asyncio
 import inspect
 
 from .cache_inproc import cache

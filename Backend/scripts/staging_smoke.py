@@ -7,7 +7,6 @@ Exit code 0 means all core checks passed.
 Usage: python Backend/scripts/staging_smoke.py [--base http://127.0.0.1:8000]
 """
 from __future__ import annotations
-import sys
 import os
 import json
 import argparse
