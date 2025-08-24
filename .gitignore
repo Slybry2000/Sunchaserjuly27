@@ -174,3 +174,7 @@ cython_debug/
 
 # Windows
 Thumbs.db
+
+# Allow committing Frontend's lib folder (we have a telemetry stub used by CI)
+!Frontend/lib/
+!Frontend/lib/**
