@@ -55,7 +55,7 @@ Previous delta (2025-08-21):
 - ✅ Pushed a no-op CI trigger commit to `feature/cors-hardening` to force workflows to run against the updated branch.
 - ✅ New Flutter CI run queued for the pushed commit (monitoring in progress).
 
-Next immediate action: **Dataset expansion and OpenAPI polish** for Phase B completion. The critical infrastructure (logging, geocoding, PowerShell workflow) and conditional requests (If-None-Match/304) are now complete. Continue with Phase B by expanding the dataset to ≥100 locations and adding comprehensive OpenAPI documentation.
+Next immediate action: **OpenAPI documentation polish** for Phase B completion. The critical infrastructure (logging, geocoding, PowerShell workflow), conditional requests (If-None-Match/304), and dataset expansion (100 locations with categories/elevation/state/timezone) are now complete. Continue with comprehensive OpenAPI documentation to showcase the enriched location metadata and provide clear API contract specifications.
 
 Next stabilization tasks (short, owned):
 
@@ -635,19 +635,26 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
 
 1. **Conditional Requests**
 
-   * [ ] Implement `If-None-Match` handling in router
-   * [ ] Tests: 304 response, invariance with identical inputs
+   * [x] Implement `If-None-Match` handling in router
+   * [x] Tests: 304 response, invariance with identical inputs
 2. **Dataset Expansion**
 
-   * [ ] Grow to ≥100 rows; add `category` column
-   * [ ] Update validator and loader; add tests
+   * [x] Grow to ≥100 rows; add `category` column
+   * [x] Update validator and loader; add tests
+   * [x] Add elevation, state, timezone metadata fields
+   * [x] Update Pydantic models to include enriched location data
+   * [x] Update scoring pipeline to pass through all metadata
 3. **Error Taxonomy & Mapping**
    
    * [x] Define `UpstreamError`, `TimeoutBudgetExceeded`, `LocationNotFound`
    * [x] Exception handlers → `ErrorPayload` with status codes (tests added for 502/404/504)
 4. **OpenAPI Polish**
 
-   * [ ] Docstrings, units; finalize example JSON
+   * [ ] Add comprehensive field docstrings with units (miles, °F, %, ISO local hour)
+   * [ ] Update endpoint descriptions to reflect expanded dataset capabilities
+   * [ ] Add example responses showcasing category, elevation, state, timezone fields
+   * [ ] Document conditional request behavior (If-None-Match → 304)
+   * [ ] Add OpenAPI schema validation for new location metadata fields
 5. **Cache Unification**
 
    * [ ] Remove any Redis dependency paths; single cache impl
