@@ -190,55 +190,53 @@ elif cors_allowed:
                     )
         return await call_next(request)
 
-# Optional beta key gate: when BETA_KEYS is set (comma-separated), require X-Beta-Key
-# header on incoming requests. Exempt health and debug endpoints and OPTIONS preflight
-# so monitoring and CORS preflight continue to function. This is intentionally
-# lightweight and intended for small tester allowlists during Phase C beta.
-beta_keys_env = os.environ.get('BETA_KEYS', '').strip()
-if beta_keys_env:
-    logger.info('BETA_KEYS configured: %s', beta_keys_env)
+# Beta key gate middleware: always register a middleware that checks the
+# BETA_KEYS environment variable at request time. This avoids import-order
+# test flakiness where tests set env vars after the app has been constructed.
+class BetaKeyMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, *args, **kwargs):
+        super().__init__(app)
 
-    class BetaKeyMiddleware(BaseHTTPMiddleware):
-        def __init__(self, app, *args, **kwargs):
-            # Read keys from environment so add_middleware can be called
-            # without passing kwargs (keeps mypy happy).
-            super().__init__(app)
-            env = os.environ.get('BETA_KEYS', '').strip()
-            self._keys = {k.strip() for k in env.split(',') if k.strip()}
-
-        async def dispatch(self, request: Request, call_next):
-            # Allow CORS preflight and public health/debug endpoints without a key
-            if request.method == 'OPTIONS':
-                return await call_next(request)
-
-            # Exempt simple health/debug endpoints so uptime checks continue to work
-            if request.url.path in ('/health', '/_debug_env'):
-                return await call_next(request)
-
-            header = request.headers.get('x-beta-key') or request.headers.get('X-Beta-Key')
-            if not header:
-                return JSONResponse(
-                    status_code=401,
-                    content={
-                        'error': 'beta_key_required',
-                        'detail': 'Missing X-Beta-Key header',
-                    },
-                )
-            if header not in self._keys:
-                return JSONResponse(
-                    status_code=401,
-                    content={
-                        'error': 'beta_key_invalid',
-                        'detail': 'Invalid X-Beta-Key',
-                    },
-                )
+    async def dispatch(self, request: Request, call_next):
+        # Allow CORS preflight and public health/debug endpoints without a key
+        if request.method == 'OPTIONS':
             return await call_next(request)
 
-    # Install the class-based middleware so it runs as an early ASGI middleware.
-    # Use the Middleware wrapper and insert it at the front of the user_middleware
-    # list so it executes before other middlewares and before FastAPI validation.
-    from starlette.middleware import Middleware as _MiddlewareWrapper
-    app.user_middleware.insert(0, _MiddlewareWrapper(BetaKeyMiddleware))  # type: ignore
+        # Exempt simple health/debug endpoints so uptime checks continue to work
+        if request.url.path in ('/health', '/_debug_env'):
+            return await call_next(request)
+
+        # Read keys at request time so tests that mutate env before a request
+        # are honored even if the app was constructed earlier.
+        env = os.environ.get('BETA_KEYS', '').strip()
+        if not env:
+            # No keys configured -> no gating enforced
+            return await call_next(request)
+
+        keys = {k.strip() for k in env.split(',') if k.strip()}
+        header = request.headers.get('x-beta-key') or request.headers.get('X-Beta-Key')
+        if not header:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    'error': 'beta_key_required',
+                    'detail': 'Missing X-Beta-Key header',
+                },
+            )
+        if header not in keys:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    'error': 'beta_key_invalid',
+                    'detail': 'Invalid X-Beta-Key',
+                },
+            )
+        return await call_next(request)
+
+# Always register the middleware so it runs before FastAPI validation. The
+# middleware is a no-op unless BETA_KEYS is set in the environment at request
+# time.
+app.add_middleware(BetaKeyMiddleware)
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
