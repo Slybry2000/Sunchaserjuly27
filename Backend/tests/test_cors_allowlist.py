@@ -5,8 +5,12 @@ from fastapi.testclient import TestClient
 
 
 def _reload_app():
-    # Reload the backend module and the top-level shim so environment changes
-    # to CORS_ALLOWED_ORIGINS are picked up.
+    # Ensure any permissive dev CORS flag is unset so tests exercise the
+    # configured allowlist behavior. Then reload the backend module and the
+    # top-level shim so environment changes to CORS_ALLOWED_ORIGINS are picked up.
+    import os
+    os.environ.pop('DEV_ALLOW_CORS', None)
+
     import Backend.main as backend_main
     import main as top_main
     importlib.reload(backend_main)
