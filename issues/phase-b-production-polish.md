@@ -44,8 +44,11 @@ labels: [phase-b, backend, production]
 
 ## Future Tasks (Phase B+)
 
-### 6. Cache Unification
-- [ ] Remove any Redis dependency paths; single cache impl
+### 6. Cache Unification ✅
+- [x] Remove Redis dependency paths; unified single cache implementation
+- [x] Simplify cache.py to use only in-process cache with SWR capabilities
+- [x] Maintain backward compatibility for existing cache decorator interface
+- [x] Verify all cache-related tests pass with unified implementation
 
 ### 7. Security Lite
 - [ ] CORS allowlist, headers; optional API key gate

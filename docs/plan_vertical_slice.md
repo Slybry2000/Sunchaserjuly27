@@ -55,7 +55,7 @@ Previous delta (2025-08-21):
 - ✅ Pushed a no-op CI trigger commit to `feature/cors-hardening` to force workflows to run against the updated branch.
 - ✅ New Flutter CI run queued for the pushed commit (monitoring in progress).
 
-Next immediate action: **OpenAPI documentation polish** for Phase B completion. The critical infrastructure (logging, geocoding, PowerShell workflow), conditional requests (If-None-Match/304), and dataset expansion (100 locations with categories/elevation/state/timezone) are now complete. Continue with comprehensive OpenAPI documentation to showcase the enriched location metadata and provide clear API contract specifications.
+Next immediate action: **Phase B is complete!** All production polish tasks have been successfully finished including conditional requests, dataset expansion, error handling, infrastructure hardening, and comprehensive OpenAPI documentation. Ready to proceed with **Phase C (Frontend Integration)** for mobile app development or **Phase D (Load Testing & Scaling)** for performance optimization.
 
 Next stabilization tasks (short, owned):
 
@@ -134,8 +134,8 @@ This single document merges and supersedes:
 
 ### 0.2 What's IN PROGRESS / NEXT
 
-* ✅ Phase B complete: 304 conditional responses, dataset expansion (100 locations with metadata), OpenAPI documentation
-* 🟡 Cache unification and security hardening (Phase B+)
+* ✅ Phase B complete: 304 conditional responses, dataset expansion (100 locations with metadata), OpenAPI documentation, cache unification
+* 🟡 Security hardening (CORS allowlist, optional API key gate)
 * 🟡 Phase C: Frontend integration and mobile app development
 
 ### 0.3 What’s DEFERRED (explicitly)
