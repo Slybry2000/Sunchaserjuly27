@@ -221,32 +221,32 @@ class _SettingsScreenState extends State<SettingsScreen> with TickerProviderStat
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Temperature Unit'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: const Text('Fahrenheit (°F)'),
-                value: 'Fahrenheit',
-                groupValue: temperatureUnit,
-                onChanged: (String? value) {
-                  setState(() {
-                    temperatureUnit = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Celsius (°C)'),
-                value: 'Celsius',
-                groupValue: temperatureUnit,
-                onChanged: (String? value) {
-                  setState(() {
-                    temperatureUnit = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+          // Minimal local RadioGroup implementation to follow the newer
+          // API pattern (ancestor manages selection) while remaining
+          // compatible across SDK versions. Uses GroupRadioListTile
+          // which delegates selection to the enclosing RadioGroup.
+          content: RadioGroup<String>(
+            value: temperatureUnit,
+            onChanged: (String? newValue) {
+              if (newValue == null) return;
+              setState(() {
+                temperatureUnit = newValue;
+              });
+              Navigator.pop(context);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GroupRadioListTile<String>(
+                  title: const Text('Fahrenheit (°F)'),
+                  value: 'Fahrenheit',
+                ),
+                GroupRadioListTile<String>(
+                  title: const Text('Celsius (°C)'),
+                  value: 'Celsius',
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -338,6 +338,62 @@ class _SettingsTile extends StatelessWidget {
         contentPadding: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+    );
+  }
+}
+
+// Lightweight RadioGroup implementation to emulate the newer ancestor-driven
+// radio API. This local helper avoids requiring a minimum Flutter SDK and
+// keeps the settings screen backward-compatible.
+class RadioGroup<T> extends InheritedWidget {
+  final T value;
+  final ValueChanged<T?> onChanged;
+
+  const RadioGroup({
+    required this.value,
+    required this.onChanged,
+    required super.child,
+    super.key,
+  }) : super();
+
+  static RadioGroup<T>? of<T>(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<RadioGroup<T>>();
+  }
+
+  @override
+  bool updateShouldNotify(covariant RadioGroup<T> oldWidget) {
+    return oldWidget.value != value;
+  }
+}
+
+class GroupRadioListTile<T> extends StatelessWidget {
+  final T value;
+  final Widget title;
+
+  const GroupRadioListTile({
+    required this.value,
+    required this.title,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final group = RadioGroup.of<T>(context);
+    final theme = Theme.of(context);
+    final selected = group != null && group.value == value;
+
+    return ListTile(
+      onTap: () => group?.onChanged(value),
+      leading: Radio<T>(
+        groupValue: group?.value,
+        value: value,
+        onChanged: group?.onChanged,
+      ),
+      title: DefaultTextStyle.merge(
+        style: theme.textTheme.bodyMedium ?? const TextStyle(),
+        child: title,
+      ),
+      selected: selected,
     );
   }
 }

@@ -164,6 +164,9 @@ async def recommend(
         from Backend.services.geocode import geocode as _geocode
         from Backend.models.errors import LocationNotFound as _LN
         try:
+            # q is validated by earlier logic to be present when we take the
+            # geocode path; assert for the type-checker so mypy knows it's a str.
+            assert q is not None
             origin = await _geocode(q)
         except _LN:
             return JSONResponse(
@@ -202,6 +205,7 @@ async def recommend(
         response_obj = RecommendResponse(
             query={"lat": origin[0], "lon": origin[1], "radius": radius},
             results=results,
+            version="v1",
         )
         payload = response_obj.model_dump()
         payload_out = dict(payload)
@@ -243,7 +247,8 @@ async def recommend(
     # Compose response
     response_obj = RecommendResponse(
         query={"lat": origin[0], "lon": origin[1], "radius": radius},
-        results=results
+        results=results,
+        version="v1",
     )
     # Full payload for the response
     payload = response_obj.model_dump()

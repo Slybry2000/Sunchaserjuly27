@@ -196,13 +196,15 @@ elif cors_allowed:
 # lightweight and intended for small tester allowlists during Phase C beta.
 beta_keys_env = os.environ.get('BETA_KEYS', '').strip()
 if beta_keys_env:
-    _beta_keys = {k.strip() for k in beta_keys_env.split(',') if k.strip()}
-    logger.info('BETA_KEYS configured: %d keys', len(_beta_keys))
+    logger.info('BETA_KEYS configured: %s', beta_keys_env)
 
     class BetaKeyMiddleware(BaseHTTPMiddleware):
-        def __init__(self, app, keys: set):
+        def __init__(self, app, *args, **kwargs):
+            # Read keys from environment so add_middleware can be called
+            # without passing kwargs (keeps mypy happy).
             super().__init__(app)
-            self._keys = keys
+            env = os.environ.get('BETA_KEYS', '').strip()
+            self._keys = {k.strip() for k in env.split(',') if k.strip()}
 
         async def dispatch(self, request: Request, call_next):
             # Allow CORS preflight and public health/debug endpoints without a key
@@ -232,8 +234,11 @@ if beta_keys_env:
                 )
             return await call_next(request)
 
-    # Install the class-based middleware so it runs as an early ASGI middleware
-    app.add_middleware(BetaKeyMiddleware, keys=_beta_keys)
+    # Install the class-based middleware so it runs as an early ASGI middleware.
+    # Use the Middleware wrapper and insert it at the front of the user_middleware
+    # list so it executes before other middlewares and before FastAPI validation.
+    from starlette.middleware import Middleware as _MiddlewareWrapper
+    app.user_middleware.insert(0, _MiddlewareWrapper(BetaKeyMiddleware))  # type: ignore
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
