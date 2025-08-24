@@ -41,7 +41,8 @@ jobs:
       - name: Ruff
         run: ruff check .
       - name: Mypy
-        run: mypy --config-file mypy.ini
+        # job defaults working-directory=./Backend, so point mypy at the repo-root config
+        run: mypy --config-file ../mypy.ini Backend
 
   backend-test:
     name: Backend • Tests
