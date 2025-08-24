@@ -102,9 +102,8 @@ async def recommend(
     ),
     radius: int = Query(
         default=int(os.getenv("RECOMMEND_DEFAULT_RADIUS_MI","100")),
-        description="Search radius in miles (5-300). Larger radius includes more distant locations but may impact performance.",
+        description="Search radius in miles (minimum 5). Larger radius includes more distant locations but may impact performance.",
         ge=5,
-        le=300
     ),
     when: str | None = Query(
         default=None,

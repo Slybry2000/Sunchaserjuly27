@@ -14,6 +14,7 @@ import os
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -198,34 +199,41 @@ if beta_keys_env:
     _beta_keys = {k.strip() for k in beta_keys_env.split(',') if k.strip()}
     logger.info('BETA_KEYS configured: %d keys', len(_beta_keys))
 
-    @app.middleware("http")
-    async def beta_key_middleware(request: Request, call_next):
-        # Allow CORS preflight and public health/debug endpoints without a key
-        if request.method == 'OPTIONS':
+    class BetaKeyMiddleware(BaseHTTPMiddleware):
+        def __init__(self, app, keys: set):
+            super().__init__(app)
+            self._keys = keys
+
+        async def dispatch(self, request: Request, call_next):
+            # Allow CORS preflight and public health/debug endpoints without a key
+            if request.method == 'OPTIONS':
+                return await call_next(request)
+
+            # Exempt simple health/debug endpoints so uptime checks continue to work
+            if request.url.path in ('/health', '/_debug_env'):
+                return await call_next(request)
+
+            header = request.headers.get('x-beta-key') or request.headers.get('X-Beta-Key')
+            if not header:
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        'error': 'beta_key_required',
+                        'detail': 'Missing X-Beta-Key header',
+                    },
+                )
+            if header not in self._keys:
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        'error': 'beta_key_invalid',
+                        'detail': 'Invalid X-Beta-Key',
+                    },
+                )
             return await call_next(request)
 
-        # Exempt simple health/debug endpoints so uptime checks continue to work
-        if request.url.path in ('/health', '/_debug_env'):
-            return await call_next(request)
-
-        header = request.headers.get('x-beta-key') or request.headers.get('X-Beta-Key')
-        if not header:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    'error': 'beta_key_required',
-                    'detail': 'Missing X-Beta-Key header',
-                },
-            )
-        if header not in _beta_keys:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    'error': 'beta_key_invalid',
-                    'detail': 'Invalid X-Beta-Key',
-                },
-            )
-        return await call_next(request)
+    # Install the class-based middleware so it runs as an early ASGI middleware
+    app.add_middleware(BetaKeyMiddleware, keys=_beta_keys)
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
