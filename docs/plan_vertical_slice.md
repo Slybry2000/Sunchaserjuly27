@@ -45,12 +45,14 @@ Previous delta (2025-08-21):
 - ✅ Pushed a no-op CI trigger commit to `feature/cors-hardening` to force workflows to run against the updated branch.
 - ✅ New Flutter CI run queued for the pushed commit (monitoring in progress).
 
-Next immediate action: **Implement If-None-Match/304 handling** and finalize Phase B backend polish. The critical infrastructure issues (logging explosions, geocoding auth, PowerShell workflow) are now resolved. Continue with Phase B by implementing conditional requests (`If-None-Match` → 304 responses) and monitoring the pushed Flutter CI workflow.
+Next immediate action: **Dataset expansion and OpenAPI polish** for Phase B completion. The critical infrastructure (logging, geocoding, PowerShell workflow) and conditional requests (If-None-Match/304) are now complete. Continue with Phase B by expanding the dataset to ≥100 locations and adding comprehensive OpenAPI documentation.
 
 Next stabilization tasks (short, owned):
 
 - ✅ **COMPLETED**: Fixed critical logging and geocoding infrastructure issues (2025-08-23)
-- [ ] **NEXT**: Implement `If-None-Match` handling in `/recommend` and `/forecasts` endpoints for 304 responses (Owner: backend)
+- ✅ **COMPLETED**: Verified If-None-Match/304 handling working correctly for both `/recommend` and `/forecasts` endpoints
+- [ ] **NEXT**: Expand dataset to ≥100 rows and add `category` column (Owner: backend)
+- [ ] **PARALLEL**: Add comprehensive OpenAPI docstrings, units, and example JSON (Owner: backend)
 - [ ] Re-enable the 4 previously skipped cache tests in CI (they were skipped pending deterministic refresh); validate full Python test suite. (Owner: backend)
 - [ ] Wait for the newest GitHub Actions runs to complete and fetch logs if any job fails. (Owner: backend/frontend on-call)
 - [ ] On CI green, merge PR #7 and perform a quick staging or local smoke test to verify CORS allowlist + ETag/304 behavior end-to-end. (Owner: backend/frontend)
