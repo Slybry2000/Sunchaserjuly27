@@ -29,22 +29,31 @@ Actionable next steps (short term):
 
 **Immediate next task (today)**
 
-* ✅ Monitor GitHub Actions for PR #7 (`feature/cors-hardening`) and triage the `analyze-and-test` Flutter job; triage performed, analyzer issues fixed (accidental Markdown fences removed) and local `flutter analyze` / `flutter test` confirmed passing.
+* ✅ Fixed critical logging explosions and geocoding issues (2025-08-23): resolved middleware logging formatter conflicts, verified Mapbox geocoding with real token, and established PowerShell-native testing patterns.
 
-Recent delta (2025-08-21):
+Recent delta (2025-08-23):
+
+- ✅ **CRITICAL FIX**: Resolved logging explosions by implementing dedicated logger with JSON serialization in `Backend/middleware/observability.py` - no more `ValueError: not enough values to unpack` errors.
+- ✅ **GEOCODING FIXED**: Verified `/geocode` endpoint working correctly with real Mapbox token (Seattle: 47.603243, -122.330286; Portland: 45.515197, -122.678367).
+- ✅ **POWERSHELL PATTERNS**: Established PowerShell-native HTTP testing patterns replacing problematic Bash heredoc attempts.
+- ✅ All three tangled issues resolved: logging stability ✅, geocoding functionality ✅, Windows development workflow ✅.
+
+Previous delta (2025-08-21):
 
 - ✅ Removed accidental Markdown fences from `Frontend/lib/...` so Dart analyzer can parse sources.
 - ✅ Restored package imports in frontend tests and resolved duplicate imports.
 - ✅ Pushed a no-op CI trigger commit to `feature/cors-hardening` to force workflows to run against the updated branch.
 - ✅ New Flutter CI run queued for the pushed commit (monitoring in progress).
 
+Next immediate action: **Implement If-None-Match/304 handling** and finalize Phase B backend polish. The critical infrastructure issues (logging explosions, geocoding auth, PowerShell workflow) are now resolved. Continue with Phase B by implementing conditional requests (`If-None-Match` → 304 responses) and monitoring the pushed Flutter CI workflow.
+
 Next stabilization tasks (short, owned):
 
-- [ ] Wait for the newest GitHub Actions runs to complete and fetch logs if any job fails. (Owner: backend/frontend on-call)
-- [ ] If Flutter analyzer/test fails in CI, reproduce locally, fix, and push minimal patches. (Owner: frontend)
-- [ ] On CI green, merge PR #7 and perform a quick staging or local smoke test to verify CORS allowlist + ETag/304 behavior end-to-end. (Owner: backend/frontend)
+- ✅ **COMPLETED**: Fixed critical logging and geocoding infrastructure issues (2025-08-23)
+- [ ] **NEXT**: Implement `If-None-Match` handling in `/recommend` and `/forecasts` endpoints for 304 responses (Owner: backend)
 - [ ] Re-enable the 4 previously skipped cache tests in CI (they were skipped pending deterministic refresh); validate full Python test suite. (Owner: backend)
-- [ ] Add a short post-merge checklist for monitoring (alerts, quick logs, traffic smoke). (Owner: ops/backend)
+- [ ] Wait for the newest GitHub Actions runs to complete and fetch logs if any job fails. (Owner: backend/frontend on-call)
+- [ ] On CI green, merge PR #7 and perform a quick staging or local smoke test to verify CORS allowlist + ETag/304 behavior end-to-end. (Owner: backend/frontend)
 
 
 

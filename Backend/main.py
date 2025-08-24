@@ -127,6 +127,20 @@ async def timeout_budget_handler(request: Request, exc: TimeoutBudgetExceeded):
 async def health():
     return {'status': 'ok'}
 
+
+@app.get('/_debug_env')
+async def _debug_env():
+    """Temporary debug endpoint: reports whether MAPBOX_TOKEN is visible in the process.
+
+    This endpoint is intended only for local debugging during restart troubleshooting
+    and can be removed once we've confirmed environment propagation.
+    """
+    token = os.getenv('MAPBOX_TOKEN')
+    return {
+        'has_mapbox': bool(token),
+        'mapbox_len': len(token) if token else 0,
+    }
+
 @app.get('/geocode')
 @cached(ttl=604800, key_prefix="geocode")  # 7 days TTL
 async def geocode_endpoint(q: str = Query(..., description="Location query (e.g., 'Seattle, WA')")):
