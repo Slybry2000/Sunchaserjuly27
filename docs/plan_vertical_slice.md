@@ -44,6 +44,7 @@ Sprint backlog (prioritized)
 
 - Frontend
    - [ ] Add unit tests for typed-search UI and `ApiClient.recommend(q: ...)` (mock HTTP) — Priority: High — Est. 2–4h (Owner: frontend)
+   - [ ] Migrate deprecated Radio usages to ancestor-driven `RadioGroup` pattern (fix analyzer deprecations) — Priority: High — Est. 1–2h (Owner: frontend)
    - [ ] Add integration / widget test for Home → Results q flow (local backend or mocked) — Priority: Medium — Est. 4–8h
    - [ ] UX polish: autosuggest / empty/error UI / accessibility improvements — Priority: Medium — Est. 4–12h
    - [ ] Add Flutter CI job (analyze + test; optional build:web) in GitHub Actions — Priority: High — Est. 2–3h
@@ -51,6 +52,8 @@ Sprint backlog (prioritized)
 - Backend
  - Backend
     - [ ] Add unit tests for `/recommend?q=...` flow (ENABLE_Q=true, geocode mocked or use `DEV_ALLOW_GEOCODE`) — Priority: High — Est. 2–4h
+   - [ ] Add CORS allowlist enforcement and tests (CORS_ALLOWED_ORIGINS, CORS_ENFORCE) — Priority: High — Est. 1–2h
+   - [ ] Add optional beta gate (`X-Beta-Key` / BETA_KEYS) middleware and tests that it short-circuits before validation — Priority: High — Est. 1–2h
     - [ ] Add integration test for full recommend path (mock weather or use small radius to limit fanout) — Priority: Medium — Est. 3–6h
     - [ ] Stabilize and lint `Backend/utils/cache.py` (fix indentation warnings observed during reloads) — Priority: High — Est. 1–2h
     - [ ] Tune weather fanout & timeouts to reduce 504s (adjust `WEATHER_FANOUT_MAX_CANDIDATES`, `REQUEST_BUDGET_MS`) — Priority: Medium — Est. 1–3h
@@ -65,6 +68,7 @@ Sprint backlog (prioritized)
 - Telemetry & Observability
    - [ ] Verify telemetry ingestion/collector and add a small local sink for dev telemetry events — Priority: Medium — Est. 2–4h
    - [ ] Add tests or assertions for telemetry emitted in critical flows (search/navigation events) — Priority: Low — Est. 1–2h
+   - [ ] Ensure `TelemetryService` contract implemented and wired to `ApiClient` (frontend) — Priority: High — Est. 1h
 
 - Data / Fixtures
  - Data / Fixtures
@@ -75,6 +79,8 @@ Sprint backlog (prioritized)
    - [ ] Backend CI: ensure pytest + lint run on PRs, re-enable skipped cache tests when stable — Priority: High — Est. 1–2h
    - [ ] Handle MAPBOX_TOKEN secret in CI for production tests (or mock geocode in CI) — Priority: Medium — Est. 1–2h
    - [ ] Merge `feature/cors-hardening` after CI green, then run staging/local smoke test — Priority: High — Est. 1–2h
+   - [ ] Make Flutter analyzer tolerant of info-level deprecations in CI (or migrate radios) — Priority: High — Est. 30m
+   - [ ] Ensure mypy runs from repo root and CI workflows point to correct working directories/configs — Priority: High — Est. 30m
 
 Short context & recent deltas (2025-08-23):
 
