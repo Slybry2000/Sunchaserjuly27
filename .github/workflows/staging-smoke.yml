@@ -1,0 +1,47 @@
+name: Staging Smoke (manual)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Start uvicorn in background
+        env:
+          ENABLE_Q: 'true'
+          DEV_ALLOW_GEOCODE: 'true'
+          DEV_BYPASS_SCORING: 'true'
+          DEV_ALLOW_CORS: 'true'
+        run: |
+          # start uvicorn in the background and write PID to a file
+          python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8000 &
+          echo $! > uvicorn.pid || true
+          # wait for the server to warm up
+          sleep 5
+
+      - name: Run staging smoke script
+        run: |
+          python Backend/scripts/staging_smoke.py --base http://127.0.0.1:8000
+
+      - name: Run quick tests (dev q-path)
+        run: |
+          pytest -q Backend/tests/test_recommend_q_dev.py -q
+
+      - name: Stop uvicorn
+        if: always()
+        run: |
+          pkill -f uvicorn || true
