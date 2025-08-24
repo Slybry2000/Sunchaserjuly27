@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt', 'Backend/pyproject.toml') }}
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt', 'Backend/pyproject.toml') }}
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
