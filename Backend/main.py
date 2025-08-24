@@ -136,23 +136,27 @@ cors_allowed = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
 
 if dev_allow:
     # Permissive CORS for local development/debugging
-    app.add_middleware(
-        cast(_Any, CORSMiddleware),
+    cast(_Any, app).add_middleware(
+        CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Length"],
+        max_age=600,
     )
     logger.info('DEV_ALLOW_CORS enabled: permissive CORS (allow_origins=*)')
 elif cors_allowed:
     # Normalize origins (strip whitespace and trailing slash) for comparison
     origins = [o.strip().rstrip('/') for o in cors_allowed.split(',') if o.strip()]
-    app.add_middleware(
-        cast(_Any, CORSMiddleware),
+    cast(_Any, app).add_middleware(
+        CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
+        expose_headers=["Content-Length"],
+        max_age=600,
     )
     logger.info('CORS allowlist configured: %s', origins)
 
@@ -236,7 +240,7 @@ class BetaKeyMiddleware(BaseHTTPMiddleware):
 # Always register the middleware so it runs before FastAPI validation. The
 # middleware is a no-op unless BETA_KEYS is set in the environment at request
 # time.
-app.add_middleware(BetaKeyMiddleware)
+cast(_Any, app).add_middleware(BetaKeyMiddleware)
 
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
