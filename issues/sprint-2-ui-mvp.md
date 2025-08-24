@@ -12,6 +12,9 @@ Tasks:
 - Wire UI to dummy data first; implement models for `RecommendResponse`
 - Implement radius and date selectors; basic client-side filtering
 - Add simple navigation and basic styling
+ - Add unit tests for typed-search UI and `ApiClient.recommend(q: ...)` (mock HTTP) and verify ETag/304 behavior
+ - Ensure Flutter CI (`.github/workflows/flutter-ci.yml`) is present and runs analyze + test on PRs
+ - Update `Frontend/README.md` with quick run instructions including `--dart-define=API_BASE_URL` for dev and emulator hosts
 
 Acceptance criteria:
 - App can show dummy results and navigate between screens
