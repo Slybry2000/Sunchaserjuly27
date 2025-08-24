@@ -25,12 +25,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt', 'Backend/pyproject.toml') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt', 'requirements-dev.txt', 'pyproject.toml', 'Backend/requirements*.txt') }}
       - name: Install deps
+        # Run install from repo root so requirements.txt (if present) is found.
+        working-directory: ./
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
-          if [ -f pyproject.toml ] || [ -f setup.py ]; then pip install -e .; fi
+          # Install pinned requirements if present
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          # Prefer editable install with dev extras if available, else editable install
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            pip install -e ".[dev]" || pip install -e .
+          fi
       - name: Ruff
         run: ruff check .
       - name: Mypy
@@ -52,12 +59,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt', 'Backend/pyproject.toml') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt', 'requirements-dev.txt', 'pyproject.toml', 'Backend/requirements*.txt') }}
       - name: Install deps
+        working-directory: ./
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
-          if [ -f pyproject.toml ] || [ -f setup.py ]; then pip install -e .; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            pip install -e ".[dev]" || pip install -e .
+          fi
       - name: Run tests
         run: pytest -q
       - name: Coverage (XML)
