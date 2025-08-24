@@ -17,7 +17,10 @@ def all_locations() -> list[dict]:
                 "name": row["name"],
                 "lat": float(row["lat"]),
                 "lon": float(row["lon"]),
+                "elevation": float(row.get("elevation", 0)),
+                "category": row.get("category", ""),
                 "state": row.get("state", ""),
+                "timezone": row.get("timezone", "America/Los_Angeles"),
             })
         # Some test environments expect a larger list; if CSV is small,
         # repeat entries to reach at least 50 items to satisfy tests.

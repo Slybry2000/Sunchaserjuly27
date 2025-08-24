@@ -19,6 +19,16 @@
 * ✅ Cache operations tested (get/set, TTL, LRU eviction, SWR behavior)
 * ✅ ETag/304 HTTP caching functionality implemented and tested
 * ✅ Error handling and observability middleware tested
+
+**Phase B dataset expansion complete**:
+
+* ✅ Expanded dataset from ~50 to 100 unique PNW locations with comprehensive metadata
+* ✅ Added category field (Forest, Gorge, Beach, Lake, etc.) for location classification 
+* ✅ Added elevation, state, and timezone fields for richer location context
+* ✅ Updated Pydantic models (`Recommendation`) to include all new fields
+* ✅ Updated scoring pipeline to pass through expanded location metadata
+* ✅ All tests passing: dataset expansion tests, recommendation API tests
+* ✅ Verified API responses include all new fields: category, elevation, state, timezone
 * ✅ Fixed cache implementation consistency issues and tuple unpacking errors
 * ✅ Pytest configuration optimized for async testing (pyproject.toml)
 * ✅ Test isolation achieved through comprehensive service mocking
@@ -122,7 +132,10 @@ This single document merges and supersedes:
 
 ### 0.2 What’s IN PROGRESS / NEXT
 
-* 🟡 Phase B start: 304 conditional responses, dataset expansion (≥100 rows+categories), cache unification notes
+### 0.2 What's IN PROGRESS / NEXT
+
+* ✅ Phase B complete: 304 conditional responses, dataset expansion (100 locations with categories/elevation/state/timezone)
+* 🟡 OpenAPI documentation polish and comprehensive examples
 
 ### 0.3 What’s DEFERRED (explicitly)
 

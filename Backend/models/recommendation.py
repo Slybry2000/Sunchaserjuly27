@@ -7,6 +7,10 @@ class Recommendation(BaseModel):
     name: str
     lat: float
     lon: float
+    elevation: float
+    category: str
+    state: str
+    timezone: str
     distance_mi: float
     sun_start_iso: Optional[str] = None  # explicit ISO string
     duration_hours: int = 0
