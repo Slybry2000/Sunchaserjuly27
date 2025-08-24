@@ -99,3 +99,6 @@ id,name,lat,lon,elevation,category,state,timezone
 98,Mount Hood_98,45.408755,-121.718070,3426,Trail,OR,America/Los_Angeles
 99,Deception Pass_99,48.396834,-122.682766,0,Forest,WA,America/Los_Angeles
 100,Mount Bachelor_100,43.932887,-121.700898,2763,Desert,OR,America/Los_Angeles
+101,Volunteer Park_101,47.606200,-122.332100,150,Urban Park,WA,America/Los_Angeles
+102,Gas Works Park_102,47.6456,-122.3344,30,Urban Park,WA,America/Los_Angeles
+103,Discovery Park_103,47.6573,-122.4058,50,Urban Park,WA,America/Los_Angeles

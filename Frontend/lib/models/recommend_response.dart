@@ -3,6 +3,10 @@ class RecommendationResult {
   final String name;
   final double lat;
   final double lon;
+  final double elevation;
+  final String category;
+  final String state;
+  final String timezone;
   final double distanceMi;
   final String? sunStartIso;
   final int durationHours;
@@ -13,6 +17,10 @@ class RecommendationResult {
     required this.name,
     required this.lat,
     required this.lon,
+    required this.elevation,
+    required this.category,
+    required this.state,
+    required this.timezone,
     required this.distanceMi,
     required this.sunStartIso,
     required this.durationHours,
@@ -24,6 +32,10 @@ class RecommendationResult {
         name: json['name'] as String,
         lat: (json['lat'] as num).toDouble(),
         lon: (json['lon'] as num).toDouble(),
+        elevation: (json['elevation'] as num).toDouble(),
+        category: json['category'] as String,
+        state: json['state'] as String,
+        timezone: json['timezone'] as String,
         distanceMi: (json['distance_mi'] as num).toDouble(),
         sunStartIso: json['sun_start_iso'] as String?,
         durationHours: (json['duration_hours'] as num).toInt(),
@@ -35,6 +47,10 @@ class RecommendationResult {
         'name': name,
         'lat': lat,
         'lon': lon,
+        'elevation': elevation,
+        'category': category,
+        'state': state,
+        'timezone': timezone,
         'distance_mi': distanceMi,
         'sun_start_iso': sunStartIso,
         'duration_hours': durationHours,

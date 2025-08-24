@@ -23,6 +23,22 @@ async def geocode(query: str) -> tuple[float, float]:
     """
     mapbox_token = os.getenv("MAPBOX_TOKEN")
     if not mapbox_token:
+        # Development convenience: allow a small local mapping when explicitly enabled.
+        dev_allow = os.getenv("DEV_ALLOW_GEOCODE", "").lower() in ("1", "true", "yes")
+        if dev_allow:
+            # Simple, small mapping for common test queries. Keep this intentionally tiny.
+            fallback = {
+                "seattle": (47.6062, -122.3321),
+                "seattle, wa": (47.6062, -122.3321),
+                "portland": (45.5152, -122.6784),
+                "portland, or": (45.5152, -122.6784),
+                "renton": (47.4829, -122.2171),
+                "renton, wa": (47.4829, -122.2171),
+            }
+            qnorm = query.strip().lower()
+            if qnorm in fallback:
+                return fallback[qnorm]
+            raise LocationNotFound(f"Dev geocode: no mapping for query: {query}")
         raise ValueError("MAPBOX_TOKEN environment variable not set")
 
     url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json"

@@ -189,6 +189,44 @@ elif cors_allowed:
                     )
         return await call_next(request)
 
+# Optional beta key gate: when BETA_KEYS is set (comma-separated), require X-Beta-Key
+# header on incoming requests. Exempt health and debug endpoints and OPTIONS preflight
+# so monitoring and CORS preflight continue to function. This is intentionally
+# lightweight and intended for small tester allowlists during Phase C beta.
+beta_keys_env = os.environ.get('BETA_KEYS', '').strip()
+if beta_keys_env:
+    _beta_keys = {k.strip() for k in beta_keys_env.split(',') if k.strip()}
+    logger.info('BETA_KEYS configured: %d keys', len(_beta_keys))
+
+    @app.middleware("http")
+    async def beta_key_middleware(request: Request, call_next):
+        # Allow CORS preflight and public health/debug endpoints without a key
+        if request.method == 'OPTIONS':
+            return await call_next(request)
+
+        # Exempt simple health/debug endpoints so uptime checks continue to work
+        if request.url.path in ('/health', '/_debug_env'):
+            return await call_next(request)
+
+        header = request.headers.get('x-beta-key') or request.headers.get('X-Beta-Key')
+        if not header:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    'error': 'beta_key_required',
+                    'detail': 'Missing X-Beta-Key header',
+                },
+            )
+        if header not in _beta_keys:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    'error': 'beta_key_invalid',
+                    'detail': 'Invalid X-Beta-Key',
+                },
+            )
+        return await call_next(request)
+
 # Exception handlers for error taxonomy
 @app.exception_handler(UpstreamError)
 async def upstream_error_handler(request: Request, exc: UpstreamError):
