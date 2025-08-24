@@ -134,8 +134,9 @@ This single document merges and supersedes:
 
 ### 0.2 What's IN PROGRESS / NEXT
 
-* ✅ Phase B complete: 304 conditional responses, dataset expansion (100 locations with categories/elevation/state/timezone)
-* 🟡 OpenAPI documentation polish and comprehensive examples
+* ✅ Phase B complete: 304 conditional responses, dataset expansion (100 locations with metadata), OpenAPI documentation
+* 🟡 Cache unification and security hardening (Phase B+)
+* 🟡 Phase C: Frontend integration and mobile app development
 
 ### 0.3 What’s DEFERRED (explicitly)
 
@@ -650,11 +651,12 @@ docker run -p 8080:8080 --env-file .env sunshine-api:dev
    * [x] Exception handlers → `ErrorPayload` with status codes (tests added for 502/404/504)
 4. **OpenAPI Polish**
 
-   * [ ] Add comprehensive field docstrings with units (miles, °F, %, ISO local hour)
-   * [ ] Update endpoint descriptions to reflect expanded dataset capabilities
-   * [ ] Add example responses showcasing category, elevation, state, timezone fields
-   * [ ] Document conditional request behavior (If-None-Match → 304)
-   * [ ] Add OpenAPI schema validation for new location metadata fields
+   * [x] Add comprehensive field docstrings with units (miles, °F, %, ISO local hour)
+   * [x] Update endpoint descriptions to reflect expanded dataset capabilities
+   * [x] Add example responses showcasing category, elevation, state, timezone fields
+   * [x] Document conditional request behavior (If-None-Match → 304)
+   * [x] Add OpenAPI schema validation for new location metadata fields
+   * [x] Create comprehensive API documentation with examples and error scenarios
 5. **Cache Unification**
 
    * [ ] Remove any Redis dependency paths; single cache impl

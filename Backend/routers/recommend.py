@@ -17,13 +17,105 @@ def get_weather_dep():
     """Dependency provider for weather fetch function; tests override this."""
     return None
 
-@router.get("/recommend")
+@router.get(
+    "/recommend",
+    response_model=RecommendResponse,
+    summary="Get sunshine location recommendations",
+    tags=["recommendations"],
+    description="""
+Get personalized sunshine location recommendations based on geographic coordinates and weather forecasts.
+
+This endpoint finds nearby locations within the Pacific Northwest region, analyzes weather forecasts
+to identify optimal sunshine windows, and returns ranked recommendations with comprehensive location
+metadata including category, elevation, and local timezone information.
+
+**Key Features:**
+- Weather-based scoring using cloud cover and sunshine duration
+- Rich location metadata (category, elevation, state, timezone)
+- Conditional request support (ETag/If-None-Match for 304 responses)
+- Distance-based filtering with configurable radius
+- Deterministic results for consistent caching
+
+**Scoring Algorithm:**
+Locations are scored based on earliest sunny weather windows (≤30% cloud cover) between 08:00-18:00 local time,
+weighted by sunshine duration and distance from origin. Scores range from 0-100 (higher is better).
+
+**Location Categories:**
+Forest, Gorge, Beach, Lake, Mountain, Valley, and other natural recreation areas.
+
+**Geographic Coverage:**
+Pacific Northwest region including Washington, Oregon, and Idaho.
+    """,
+    responses={
+        200: {
+            "description": "Successful recommendation response with ranked locations",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "query": {"lat": 47.603243, "lon": -122.330286, "radius": 100},
+                        "results": [
+                            {
+                                "id": "69",
+                                "name": "Deception Pass_69",
+                                "lat": 48.44522,
+                                "lon": -122.615167,
+                                "elevation": 0.0,
+                                "category": "Forest",
+                                "state": "WA",
+                                "timezone": "America/Los_Angeles",
+                                "distance_mi": 59.6,
+                                "sun_start_iso": "2024-12-30T10:00",
+                                "duration_hours": 6,
+                                "score": 94.03
+                            }
+                        ],
+                        "generated_at": "2024-12-30T18:00:00Z",
+                        "version": "v1"
+                    }
+                }
+            }
+        },
+        304: {"description": "Not Modified - content unchanged since last request (ETag match)"},
+        400: {"description": "Bad Request - invalid parameters or geocoding disabled"},
+        422: {"description": "Unprocessable Entity - missing required coordinates"},
+        502: {"description": "Bad Gateway - weather service unavailable"},
+        504: {"description": "Gateway Timeout - request exceeded time budget"}
+    }
+)
 async def recommend(
     request: Request,
-    q: str | None = Query(default=None),
-    lat: float | None = Query(default=None),
-    lon: float | None = Query(default=None),
-    radius: int = Query(default=int(os.getenv("RECOMMEND_DEFAULT_RADIUS_MI","100"))),
+    q: str | None = Query(
+        default=None, 
+        description="Location query string (e.g., 'Seattle, WA'). Requires ENABLE_Q=true environment variable. Mutually exclusive with lat/lon."
+    ),
+    lat: float | None = Query(
+        default=None, 
+        description="Latitude in decimal degrees (-90 to 90). Required when not using q parameter.",
+        ge=-90, 
+        le=90
+    ),
+    lon: float | None = Query(
+        default=None, 
+        description="Longitude in decimal degrees (-180 to 180). Required when not using q parameter.",
+        ge=-180, 
+        le=180
+    ),
+    radius: int = Query(
+        default=int(os.getenv("RECOMMEND_DEFAULT_RADIUS_MI","100")),
+        description="Search radius in miles (5-300). Larger radius includes more distant locations but may impact performance.",
+        ge=5,
+        le=300
+    ),
+    when: str | None = Query(
+        default=None,
+        description="Future date/time for forecast in ISO format (e.g., '2024-12-30T12:00:00'). Defaults to near-future optimal time window."
+    ),
+    duration: int | None = Query(
+        default=None,
+        description="Desired sunshine duration in hours (1-12). Used for scoring preference.",
+        ge=1,
+        le=12
+    ),
     get_weather_fn = Depends(get_weather_dep),
 ):
     # input validation
