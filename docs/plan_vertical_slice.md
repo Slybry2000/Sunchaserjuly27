@@ -1116,3 +1116,36 @@ Ensure backend dev server is running; for web, configure CORS to allow the dev o
 <!-- ci: trigger -->
 
 <!-- ci-trigger: 2025-08-21T00:00:00Z - trigger for updated frontend fixes -->
+
+## Sprint task additions (delta for feature/cors-hardening)
+
+Add the following tasks to the active sprints so they are tracked and picked up in the next cycle:
+
+- Telemetry & Observability
+   - [ ] Implement a production telemetry sink/adapter (file/JSONL, Cloud Logging, or HTTP forwarder) and configure via env (TELEMETRY_SINK_URL) — Priority: High — Est. 4–8h (Owner: backend/devops)
+   - [ ] Add batching and rate-limiting for telemetry ingestion; provide a non-blocking background queue and retry/backoff — Priority: Medium — Est. 3–5h (Owner: backend)
+   - [ ] Add telemetry assertions to key API tests (recommend flow emits events) and a smoke dashboard for recent events — Priority: Medium — Est. 2–3h (Owner: backend/frontend)
+
+- Security & Access
+   - [ ] Client-side beta-key UX: add a small settings UI to enter `X-Beta-Key` and persist it for requests; support debug/test keys — Priority: High — Est. 2–4h (Owner: frontend)
+   - [ ] Beta key distribution & rotation plan (document process, store hashed IDs in logs) — Priority: Medium — Est. 2h (Owner: ops/product)
+   - [ ] Harden CORS allowlist tests: include enforcement mode coverage and CI matrix for `CORS_ENFORCE=true|false` — Priority: High — Est. 1–2h (Owner: backend/ci)
+
+- Frontend UI
+   - [ ] Complete `RadioGroup` migration across all screens and replace deprecated `groupValue/onChanged` patterns — Priority: High — Est. 3–6h (Owner: frontend)
+   - [ ] Run `flutter analyze --no-fatal-infos` in CI until migration finishes, then re-enable strict analyzer — Priority: Medium — Est. 30m (Owner: frontend/ci)
+
+- CI & Monorepo Hygiene
+   - [ ] Ensure `mypy` is always executed from repo root and update the CI job matrix to test both `Backend` and `Frontend` dirs as appropriate — Priority: High — Est. 1h (Owner: devops)
+   - [ ] Add CI job to run a minimal staging smoke script after merge (health, geocode, small recommend) — Priority: High — Est. 1–2h (Owner: devops)
+   - [ ] Document `--dart-define=TELEMETRY_URL` and provide CI env values for analyze/test runs when running integration checks — Priority: Low — Est. 30m (Owner: frontend)
+
+Add these to `issues/sprint-2-ui-mvp.md` and `issues/sprint-1-data-engine.md` as actionable lines and reference PR #7 for the CORS/beta-gate related changes.
+
+---
+
+Committed changes summary:
+
+- Appended sprint tasks reflecting telemetry sink, telemetry batching/rate-limiting, client beta-key UX, CORS enforcement tests, completed RadioGroup migration across frontend screens, and CI/mypy/workflow hardening.
+
+These edits have been saved to `docs/plan_vertical_slice.md` on branch `feature/cors-hardening`.
