@@ -75,6 +75,20 @@ jobs:
           if [ -f pyproject.toml ] || [ -f setup.py ]; then
             pip install -e ".[dev]" || pip install -e .
           fi
+      - name: Metrics smoke check (start uvicorn & curl /metrics)
+        # Run from Backend dir (job default) so `main:app` imports correctly
+        run: |
+          python -m uvicorn main:app --host 127.0.0.1 --port 8001 --log-level warning & echo $! > uvicorn.pid
+          # wait up to 10*0.5s for the server to start
+          for i in {1..10}; do
+            if curl -sSf http://127.0.0.1:8001/metrics >/dev/null 2>&1; then
+              echo "metrics endpoint reachable"
+              break
+            fi
+            sleep 0.5
+          done
+          cat uvicorn.pid
+          kill $(cat uvicorn.pid) || true
       - name: Verify prometheus_client available
         working-directory: ./
         run: |
