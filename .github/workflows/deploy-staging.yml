@@ -31,10 +31,10 @@ jobs:
           gcloud config set project ${{ secrets.GCP_PROJECT }}
           rm -f /tmp/sa-key.json
 
-      - name: Build container (Cloud Build - buildpacks)
+      - name: Build container (Cloud Build)
         run: |
-          # Use Cloud Buildpacks so a Dockerfile is not required
-          gcloud builds submit --pack --tag "$IMAGE" .
+          # Build using the repository Dockerfile
+          gcloud builds submit --tag "$IMAGE" .
 
       - name: Deploy to Cloud Run
         run: |
