@@ -13,7 +13,9 @@ class WeatherError(UpstreamError):
 
 async def get_weather(lat: float, lon: float) -> dict:
     """Compatibility wrapper used by older tests — returns raw provider dict."""
-    raw = await fetch_weather_raw(lat, lon)
+    # Call the public alias `fetch_weather` so tests that monkeypatch
+    # `services.weather.fetch_weather` intercept network calls.
+    raw = await fetch_weather(lat, lon)
     return raw
 
 logger = logging.getLogger("weather")
