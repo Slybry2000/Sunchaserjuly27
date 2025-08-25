@@ -1,4 +1,3 @@
-import os
 import asyncio
 import types
 from Backend.services.telemetry_sink import sink_event_forward_http

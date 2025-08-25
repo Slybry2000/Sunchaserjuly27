@@ -1,4 +1,3 @@
-import os
 import json
 import time
 from fastapi.testclient import TestClient
@@ -25,6 +24,6 @@ def test_telemetry_batching_writes_jsonl(tmp_path, monkeypatch):
     assert sink_file.exists()
     lines = sink_file.read_text(encoding='utf-8').splitlines()
     assert len(lines) >= 2
-    parsed = [json.loads(l) for l in lines]
+    parsed = [json.loads(line) for line in lines]
     names = {p.get('event') for p in parsed}
     assert 'batch1' in names and 'batch2' in names

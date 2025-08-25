@@ -191,6 +191,19 @@ runs are deterministic by default when running the backend test suite. You can
 override this behavior in your shell if you need to test the asynchronous
 background refresh logic manually.
 
+## Pre-commit (developer)
+
+We use `pre-commit` to auto-run linters and formatters locally. To enable it:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+The repository includes a `.pre-commit-config.yaml` that runs `ruff --fix` so
+unused imports and simple style fixes are applied automatically before commits.
+
+
 ## 🏗️ Architecture
 
 ### Current Implementation (Phase B Backend Complete)
