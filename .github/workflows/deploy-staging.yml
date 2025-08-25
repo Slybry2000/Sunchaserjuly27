@@ -1,0 +1,51 @@
+name: Deploy to Cloud Run (staging)
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/app/${{ secrets.CLOUD_RUN_SERVICE }}:staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Build container (Cloud Build)
+        run: |
+          gcloud builds submit --tag "$IMAGE" .
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
+            --image "$IMAGE" \
+            --platform managed \
+            --region ${{ secrets.GCP_REGION }} \
+            --allow-unauthenticated \
+            --set-env-vars \
+              MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }},\
+              TELEMETRY_SINK_URL=${{ secrets.TELEMETRY_SINK_URL }},\
+              CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }},\
+              ENABLE_Q=true
+
+      - name: Smoke test /health and /metrics
+        run: |
+          set -euo pipefail
+          URL=$(gcloud run services describe ${{ secrets.CLOUD_RUN_SERVICE }} --region=${{ secrets.GCP_REGION }} --format='value(status.url)')
+          echo "Service URL: $URL"
+          for i in {1..20}; do
+            if curl -fsS "$URL/health"; then break; fi
+            echo "waiting for rollout... ($i/20)"; sleep 5
+          done
+          curl -fsS "$URL/metrics" | head -n 20
