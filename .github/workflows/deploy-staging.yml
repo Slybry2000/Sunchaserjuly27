@@ -15,12 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install gcloud SDK and authenticate
+      - name: Install gcloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+
+      - name: Decode GCP service account key and authenticate
+        env:
+          GCP_SA_KEY_B64: ${{ secrets.GCP_SA_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          # Decode base64-encoded service account JSON to a temp file and activate
+          printf '%s' "$GCP_SA_KEY_B64" | base64 --decode > /tmp/sa-key.json
+          gcloud auth activate-service-account --key-file=/tmp/sa-key.json
+          gcloud config set project ${{ secrets.GCP_PROJECT }}
+          rm -f /tmp/sa-key.json
 
       - name: Build container (Cloud Build - buildpacks)
         run: |
