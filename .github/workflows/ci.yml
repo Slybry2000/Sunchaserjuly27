@@ -38,6 +38,10 @@ jobs:
           if [ -f pyproject.toml ] || [ -f setup.py ]; then
             pip install -e ".[dev]" || pip install -e .
           fi
+      - name: Verify prometheus_client available
+        working-directory: ./
+        run: |
+          python -c "import prometheus_client; print('prometheus_client OK')"
       - name: Ruff
         run: ruff check .
       - name: Mypy
@@ -71,6 +75,10 @@ jobs:
           if [ -f pyproject.toml ] || [ -f setup.py ]; then
             pip install -e ".[dev]" || pip install -e .
           fi
+      - name: Verify prometheus_client available
+        working-directory: ./
+        run: |
+          python -c "import prometheus_client; print('prometheus_client OK')"
       - name: Run tests
         run: pytest -q
       - name: Coverage (XML)
