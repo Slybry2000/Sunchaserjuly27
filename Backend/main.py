@@ -3,12 +3,18 @@ from fastapi import FastAPI, Query, Request
 from Backend.services.geocode import geocode
 from Backend.utils.cache import cached
 from Backend.services.http import get_http_client, close_http_client
+from Backend.services.telemetry_sink import (
+    start_telemetry_batcher,
+    stop_telemetry_batcher,
+)
 from Backend.middleware.observability import ObservabilityMiddleware
 from typing import cast, Any as _Any
 from Backend.routers.recommend import router as recommend_router
 from Backend.routers.internal import router as internal_router
 from Backend.routers.forecasts import router as forecasts_router
+from Backend.routers.telemetry import router as telemetry_router
 from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
+from Backend.services.metrics import prometheus_metrics, get_metrics
 
 import os
 import logging
@@ -20,11 +26,20 @@ from starlette.middleware.base import BaseHTTPMiddleware
 async def lifespan(app: FastAPI):
     # Initialize shared resources (e.g., HTTP client)
     await get_http_client()
+    # start telemetry batcher if configured
+    try:
+        await start_telemetry_batcher()
+    except Exception:
+        logging.getLogger('sunshine_backend.telemetry.sink').exception('Failed to start telemetry batcher')
     try:
         yield
     finally:
         # Cleanup shared resources
         await close_http_client()
+        try:
+            await stop_telemetry_batcher()
+        except Exception:
+            logging.getLogger('sunshine_backend.telemetry.sink').exception('Failed to stop telemetry batcher')
 
 app = FastAPI(
     title="Sunshine Backend API",
@@ -125,6 +140,7 @@ Perfect for mobile apps, web services, and outdoor recreation platforms requirin
 app.include_router(recommend_router)
 app.include_router(internal_router)
 app.include_router(forecasts_router)
+app.include_router(telemetry_router)
 
 # Add observability middleware
 app.add_middleware(cast(_Any, ObservabilityMiddleware))
@@ -206,8 +222,9 @@ class BetaKeyMiddleware(BaseHTTPMiddleware):
         if request.method == 'OPTIONS':
             return await call_next(request)
 
-        # Exempt simple health/debug endpoints so uptime checks continue to work
-        if request.url.path in ('/health', '/_debug_env'):
+        # Exempt simple health/debug endpoints and telemetry ingestion so uptime
+        # checks and client-side telemetry can work without a beta key.
+        if request.url.path in ('/health', '/_debug_env', '/telemetry'):
             return await call_next(request)
 
         # Read keys at request time so tests that mutate env before a request
@@ -304,6 +321,18 @@ async def _debug_env():
         'has_mapbox': bool(token),
         'mapbox_len': len(token) if token else 0,
     }
+
+
+@app.get('/metrics')
+async def metrics_endpoint():
+    """Expose metrics: Prometheus text when available, otherwise JSON counters."""
+    try:
+        data = prometheus_metrics()
+        # prometheus_metrics returns bytes
+        return JSONResponse(content=data.decode('utf-8'), media_type='text/plain; version=0.0.4; charset=utf-8')
+    except Exception:
+        # fallback to JSON counters
+        return get_metrics()
 
 @app.get(
     '/geocode',
