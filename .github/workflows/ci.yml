@@ -99,6 +99,12 @@ jobs:
           fi
           # Success — kill server and continue
           kill $(cat uvicorn.pid) || true
+      - name: Upload uvicorn.log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvicorn-log
+          path: uvicorn.log
       - name: Verify prometheus_client available
         working-directory: ./
         run: |
