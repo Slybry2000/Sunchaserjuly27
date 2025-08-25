@@ -13,6 +13,12 @@ Tasks:
 - Compute Sun Confidence Score (simple heuristic: cloud% threshold + duration, or agreement across providers)
 - Persist processed results to Firestore or local store
 - Add unit tests for parsing and scoring
+ - Add dev dataset demo rows (Seattle area) so local `?q=` demos return results
+ - Add `Backend/scripts/staging_smoke.py` to run health, geocode, recommend, and ETag checks; make it runnable from PowerShell for staging smoke tests
+ - Add `docs/DEVELOPMENT.md` documenting `ENABLE_Q`, `DEV_ALLOW_GEOCODE`, `DEV_BYPASS_SCORING`, and example run commands
+ - Add a small unit test for `?q=` flow exercising `DEV_BYPASS_SCORING` to ensure deterministic demo output
+ - Add middleware tests for CORS allowlist behavior and optional `CORS_ENFORCE` flag; document in `docs/DEVELOPMENT.md`
+ - Add unit/integration tests validating beta gate middleware (`X-Beta-Key`) and ensure it short-circuits before request validation
 
 Acceptance criteria:
 - Script can fetch and store forecasts for sample locations

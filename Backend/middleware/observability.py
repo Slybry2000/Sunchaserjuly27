@@ -1,10 +1,18 @@
 import time
 import uuid
 import logging
+import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger("uvicorn.access")
+# Use a dedicated logger with simple formatter to avoid uvicorn access log formatter conflicts
+app_logger = logging.getLogger("sun_chaser.observability")
+if not app_logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(message)s'))
+    app_logger.addHandler(handler)
+    app_logger.setLevel(logging.INFO)
+    app_logger.propagate = False
 
 class ObservabilityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -14,7 +22,7 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         duration = int((time.time() - start) * 1000)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Processing-Time"] = str(duration)
-        logger.info({
+        app_logger.info(json.dumps({
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "level": "info",
             "request_id": request_id,
@@ -22,5 +30,5 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             "path": request.url.path,
             "status": response.status_code,
             "latency_ms": duration
-        })
+        }))
         return response
