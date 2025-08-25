@@ -1149,3 +1149,32 @@ Committed changes summary:
 - Appended sprint tasks reflecting telemetry sink, telemetry batching/rate-limiting, client beta-key UX, CORS enforcement tests, completed RadioGroup migration across frontend screens, and CI/mypy/workflow hardening.
 
 These edits have been saved to `docs/plan_vertical_slice.md` on branch `feature/cors-hardening`.
+
+## Sprint additions — actionable tasks to add to sprints (delta)
+
+Please add the following actionable tasks to the active sprint boards and issues so they are picked up in the next cycle:
+
+- Telemetry & Observability
+   - [ ] Implement production telemetry sink/adapter (file JSONL by `TELEMETRY_SINK_PATH`, or forwarder to `TELEMETRY_SINK_URL`) — Priority: High — Est. 4–8h (Owner: backend/devops)
+   - [ ] Add batching and rate-limiting for telemetry ingestion; non-blocking background queue + retry/backoff — Priority: Medium — Est. 3–5h (Owner: backend)
+   - [ ] Add telemetry assertions to critical API tests and a small smoke dashboard for recent events — Priority: Medium — Est. 2–3h (Owner: backend/frontend)
+
+- Security & Access
+   - [ ] Client-side beta-key UX: settings UI to enter `X-Beta-Key` and persist for requests; include test keys for dev — Priority: High — Est. 2–4h (Owner: frontend)
+   - [ ] Beta key lifecycle docs: distribution & rotation plan; hashed ID logging — Priority: Medium — Est. 2h (Owner: ops/product)
+   - [ ] Harden CORS allowlist tests: include enforcement mode coverage and CI matrix for `CORS_ENFORCE=true|false` — Priority: High — Est. 1–2h (Owner: backend/ci)
+
+- Frontend UI
+   - [ ] Complete `RadioGroup` migration across all screens and remove deprecated `Radio` patterns — Priority: High — Est. 3–6h (Owner: frontend)
+   - [ ] Temporarily run `flutter analyze --no-fatal-infos` in CI while migration finishes, then re-enable strict analyzer — Priority: Medium — Est. 30m (Owner: frontend/ci)
+
+- CI & Monorepo hygiene
+   - [ ] Ensure `mypy` runs from repo root; update CI jobs to use repo-root configs and test both `Backend` and `Frontend` where relevant — Priority: High — Est. 1h (Owner: devops)
+   - [ ] Add a CI staging smoke job (post-merge) executing health, geocode sample, recommend(small radius) — Priority: High — Est. 1–2h (Owner: devops)
+   - [ ] Document `--dart-define=TELEMETRY_URL` and provide CI env values for analyze/test runs when needed — Priority: Low — Est. 30m (Owner: frontend)
+
+Add these tasks to `issues/sprint-2-ui-mvp.md` and `issues/sprint-1-data-engine.md` as actionable checklist items and reference PR #7 for the CORS/beta-gate changes.
+
+---
+
+Changes saved and ready to commit.
