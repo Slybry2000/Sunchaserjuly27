@@ -15,21 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Install gcloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
-
-      - name: Authenticate using service account key
-        env:
-          SA_JSON: ${{ secrets.GCP_SA_KEY }}
-        run: |
-          # write the JSON to a file, supporting secrets that contain literal \n
-          printf '%b' "$SA_JSON" > /tmp/sa-key.json
-          gcloud auth activate-service-account --key-file=/tmp/sa-key.json
-          gcloud config set project ${{ secrets.GCP_PROJECT }}
-          # remove file after activation for cleanliness
-          rm -f /tmp/sa-key.json
 
       - name: Build container (Cloud Build - buildpacks)
         run: |
