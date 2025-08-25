@@ -78,16 +78,26 @@ jobs:
       - name: Metrics smoke check (start uvicorn & curl /metrics)
         # Run from Backend dir (job default) so `main:app` imports correctly
         run: |
-          python -m uvicorn main:app --host 127.0.0.1 --port 8001 --log-level warning & echo $! > uvicorn.pid
+          # Start uvicorn and capture logs to a file so we can surface them on failure
+          python -m uvicorn main:app --host 127.0.0.1 --port 8001 --log-level warning > uvicorn.log 2>&1 & echo $! > uvicorn.pid
+          started=false
           # wait up to 10*0.5s for the server to start
           for i in {1..10}; do
             if curl -sSf http://127.0.0.1:8001/metrics >/dev/null 2>&1; then
               echo "metrics endpoint reachable"
+              started=true
               break
             fi
             sleep 0.5
           done
-          cat uvicorn.pid
+          if [ "$started" = "false" ]; then
+            echo "ERROR: metrics endpoint not reachable after wait; dumping uvicorn.log:"
+            cat uvicorn.log || true
+            echo "Killing uvicorn pid: $(cat uvicorn.pid)"
+            kill $(cat uvicorn.pid) || true
+            exit 1
+          fi
+          # Success — kill server and continue
           kill $(cat uvicorn.pid) || true
       - name: Verify prometheus_client available
         working-directory: ./
