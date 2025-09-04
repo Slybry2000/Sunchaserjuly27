@@ -62,7 +62,7 @@ class _ResultsScreenState extends State<ResultsScreen> with TickerProviderStateM
     } catch (e) {
       if (mounted) {
         setState(() {
-          errorMessage = 'Failed to find sunny spots. Please try again.';
+          errorMessage = e.toString().replaceFirst('Exception: ', '');
           isLoading = false;
         });
       }

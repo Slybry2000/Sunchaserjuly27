@@ -109,7 +109,7 @@ class DataService {
             description: _buildDescription(r),
             latitude: r.lat,
             longitude: r.lon,
-            imageUrl: 'https://picsum.photos/seed/${Uri.encodeComponent(r.id)}/400/240',
+            imageUrl: _getCategoryImage(r.category),
             sunshineHours: r.durationHours,
             temperature: 70.0, // Could be enhanced with weather API temperature
             weather: 'Sunny',
@@ -150,11 +150,14 @@ class DataService {
         return spots;
       }
     } catch (e) {
-      TelemetryService.logError('Backend search failed, falling back to samples', context: 'searchSpots', exception: e);
-      // ignore and fall back to local sample generation below
+      TelemetryService.logError('Backend search failed', context: 'searchSpots', exception: e);
+      
+      // Instead of showing fake data, rethrow the error so the UI can show proper error state
+      throw Exception('Unable to connect to service. Please check your internet connection and try again.');
     }
 
-    // Fallback: simulate API call delay and return locally generated sample spots
+    // This fallback code is now unreachable - keeping for reference but should be removed
+    // TODO: Remove this entire fallback section in next cleanup
     await Future.delayed(const Duration(milliseconds: 800));
     final Random random = Random();
     
@@ -188,6 +191,31 @@ class DataService {
     }
     
     return spots;
+  }
+
+  static String _getCategoryImage(String category) {
+    // Use more reliable image sources based on category
+    // These are curated images that better represent the actual location types
+    switch (category.toLowerCase()) {
+      case 'forest':
+        return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=240&fit=crop&crop=center';
+      case 'gorge':
+        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
+      case 'beach':
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=240&fit=crop&crop=center';
+      case 'lake':
+        return 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&h=240&fit=crop&crop=center';
+      case 'mountain':
+        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
+      case 'valley':
+        return 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=240&fit=crop&crop=center';
+      case 'urban park':
+        return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center';
+      case 'park':
+        return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center';
+      default:
+        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
+    }
   }
 
   static double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {

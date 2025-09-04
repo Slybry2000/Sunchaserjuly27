@@ -31,11 +31,20 @@ class SunshineSpotCard extends StatelessWidget {
               height: 180,
               child: Stack(
                 children: [
-                  // Use Image.network with errorBuilder to avoid crashes on bad image URLs
+                  // Use Image.network with improved error handling
                   Positioned.fill(
                     child: Image.network(
                       spot.imageUrl,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
                       errorBuilder: (context, error, stackTrace) {
                         // Try to show a bundled placeholder asset, otherwise fallback to an icon
                         return Image.asset(
@@ -44,10 +53,23 @@ class SunshineSpotCard extends StatelessWidget {
                           errorBuilder: (ctx, err, st) => Container(
                             color: Colors.grey.shade200,
                             alignment: Alignment.center,
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.grey.shade500,
-                              size: 48,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.landscape,
+                                  color: Colors.grey.shade500,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  spot.category,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
