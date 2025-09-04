@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
 import 'package:sunshine_spotter/services/api_client.dart';
 import 'package:sunshine_spotter/services/telemetry_service.dart';
+import 'package:sunshine_spotter/services/location_image_service.dart';
 
 class DataService {
   static const String _favoritesKey = 'favorites';
@@ -109,7 +110,7 @@ class DataService {
             description: _buildDescription(r),
             latitude: r.lat,
             longitude: r.lon,
-            imageUrl: _getCategoryImage(r.category),
+            imageUrl: LocationImageService.getLocationImageUrl(r.id, r.category),
             sunshineHours: r.durationHours,
             temperature: 70.0, // Could be enhanced with weather API temperature
             weather: 'Sunny',
@@ -191,31 +192,6 @@ class DataService {
     }
     
     return spots;
-  }
-
-  static String _getCategoryImage(String category) {
-    // Use more reliable image sources based on category
-    // These are curated images that better represent the actual location types
-    switch (category.toLowerCase()) {
-      case 'forest':
-        return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=240&fit=crop&crop=center';
-      case 'gorge':
-        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
-      case 'beach':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=240&fit=crop&crop=center';
-      case 'lake':
-        return 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&h=240&fit=crop&crop=center';
-      case 'mountain':
-        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
-      case 'valley':
-        return 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=240&fit=crop&crop=center';
-      case 'urban park':
-        return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center';
-      case 'park':
-        return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center';
-      default:
-        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center';
-    }
   }
 
   static double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {

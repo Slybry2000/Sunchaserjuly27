@@ -4,58 +4,42 @@ on:
   push:
     branches: [ master ]
 
-env:
-  IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/app/${{ secrets.CLOUD_RUN_SERVICE }}:staging
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
+    env:
+      GCP_PROJECT: sun-chaser-081623
+      GCP_REGION: us-west1
+      CLOUD_RUN_SERVICE: sun-chaser-staging
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install gcloud SDK
+      - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ secrets.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT }}
 
-      - name: Decode base64 GCP service account key and authenticate
-        env:
-          GCP_SA_KEY_B64: ${{ secrets.GCP_SA_KEY_B64 }}
+      - name: Build (Cloud Build)
         run: |
-          set -euo pipefail
-          # Decode base64-encoded service account JSON to a temp file and activate
-          printf '%s' "$GCP_SA_KEY_B64" | base64 --decode > /tmp/sa-key.json
-          gcloud auth activate-service-account --key-file=/tmp/sa-key.json
-          gcloud config set project ${{ secrets.GCP_PROJECT }}
-          rm -f /tmp/sa-key.json
-
-      - name: Build container (Cloud Build)
-        run: |
-          # Build using the repository Dockerfile
-          gcloud builds submit --tag "$IMAGE" .
+          gcloud builds submit --tag gcr.io/${GCP_PROJECT}/${CLOUD_RUN_SERVICE}:staging .
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
-            --image "$IMAGE" \
+          gcloud run deploy ${CLOUD_RUN_SERVICE} \
+            --image gcr.io/${GCP_PROJECT}/${CLOUD_RUN_SERVICE}:staging \
             --platform managed \
-            --region ${{ secrets.GCP_REGION }} \
+            --region ${GCP_REGION} \
             --allow-unauthenticated \
-            --set-env-vars \
-              MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }},\
-              TELEMETRY_SINK_URL=${{ secrets.TELEMETRY_SINK_URL }},\
-              CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }},\
-              ENABLE_Q=true
+            --set-env-vars MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }},CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }},ENABLE_Q=true,TELEMETRY_SINK_URL=${{ secrets.TELEMETRY_SINK_URL }}
 
-      - name: Smoke test /health and /metrics
+      - name: Smoke test
         run: |
-          set -euo pipefail
-          URL=$(gcloud run services describe ${{ secrets.CLOUD_RUN_SERVICE }} --region=${{ secrets.GCP_REGION }} --format='value(status.url)')
-          echo "Service URL: $URL"
-          for i in {1..20}; do
-            if curl -fsS "$URL/health"; then break; fi
-            echo "waiting for rollout... ($i/20)"; sleep 5
-          done
-          curl -fsS "$URL/metrics" | head -n 20
+          URL=$(gcloud run services describe ${CLOUD_RUN_SERVICE} --region=${GCP_REGION} --format='value(status.url)')
+          echo "URL: $URL"
+          curl -fsS "$URL/health"
+          curl -fsS "$URL/metrics" | head -n 10
