@@ -1,6 +1,30 @@
-Development runbook
+# Development Runbook
 
-This file documents common environment flags and quick dev commands to run the backend and smoke checks locally (PowerShell examples).
+This file documents common environment flags, quick dev commands, and the new Unsplash API integration for photo management.
+
+## Current Development Status
+
+✅ **Backend**: Production-ready with 71/71 tests passing  
+✅ **Frontend**: Reliability improvements completed, LocationImageService implemented  
+🔄 **Photos**: Transitioning from stock photo strategy to Unsplash API integration  
+📋 **Next**: Implement Unsplash API for location-specific photos
+
+## Photo Development Strategy
+
+### Current Implementation
+- **LocationImageService**: Category-based fallbacks with 12 curated outdoor types
+- **Fallback Chain**: Location-specific → Category → Error state
+- **Frontend**: Proper loading states and error handling
+
+### Next Phase: Unsplash API Integration
+1. **Register Unsplash Developer Account** (50 requests/hour for development)
+2. **Implement photo search** for location + category queries
+3. **Add attribution system** with proper "Photo by [Name] on Unsplash" links
+4. **Build download tracking** (required for production API access)
+5. **Apply for production** (5,000 requests/hour after approval)
+
+**See**: `docs/UNSPLASH_INTEGRATION.md` for detailed technical implementation  
+**See**: `docs/UNSPLASH_PRODUCTION_CHECKLIST.md` for production requirements
 
 ## Feature Flags
 

@@ -11,27 +11,33 @@ A FastAPI-based service for finding sunny locations using weather data and geoco
 
 ✅ **MAJOR FRONTEND IMPROVEMENTS COMPLETED**
 - Removed dummy data fallbacks that showed fake locations
-- Implemented comprehensive image management system  
+- Implemented comprehensive LocationImageService with category-based fallbacks
 - Added proper error handling and loading states
-- Created content acquisition strategy for real photos
+- Created Unsplash API integration strategy for location-specific photos
 
-✅ **BACKEND PRODUCTION READY**
-- 71/71 tests passing
-- Full weather API integration 
-- ETag caching implemented
-- Comprehensive error handling
+✅ **BACKEND PRODUCTION READY** 
+- 71/71 tests passing with comprehensive test coverage
+- Full weather API integration with Open-Meteo
+- ETag caching and performance optimization
+- Structured logging and observability
 
-🚀 **NEXT STEPS**
-- Photo acquisition ($165-550 budget)
-- Production deployment
-- Final UX testing
+🚀 **CURRENT PHASE: Unsplash API Integration**
+- **Goal**: Replace generic category images with location-specific photography
+- **Approach**: Unsplash API with proper attribution and download tracking  
+- **Timeline**: 2-3 weeks for full implementation
+- **Benefits**: High-quality, relevant photos at no cost vs. $165-550 for stock photos
+
+🔮 **FUTURE ROADMAP**
+- User-generated content system (community photo uploads)
+- Production deployment optimization
+- Advanced photo selection algorithms
 
 ---
 
 **✅ Phase A**: Complete vertical slice - `/recommend` endpoint with weather integration  
-**✅ Phase B Backend**: Comprehensive testing and validation (43/47 tests passing)  
-**🔄 Phase B Frontend**: Flutter integration with typed Dart client  
-**⏭ Phase C**: Production deployment and security hardening
+**✅ Phase B**: Comprehensive testing and validation (71/71 tests passing)  
+**✅ Phase C**: Frontend reliability and image system improvements  
+**🔄 Phase D**: Unsplash API integration for location-specific photos
 
 ## Key Features Delivered
 
@@ -40,8 +46,32 @@ A FastAPI-based service for finding sunny locations using weather data and geoco
 - **In-Process SWR Cache**: Stale-while-revalidate with single-flight protection
 - **Deterministic ETags**: Strong caching with SHA-256 hashes
 - **Comprehensive Testing**: 91% test coverage with service isolation
-- **PNW Location Dataset**: 50+ curated locations with validation
+- **PNW Location Dataset**: 103+ curated locations with validation
 - **Observability**: Structured JSON logs, request IDs, latency tracking
+- **Flutter Frontend**: Production-ready mobile app with proper error handling
+- **LocationImageService**: Category-based image management with Unsplash integration ready
+
+## 📸 Photo Strategy: Unsplash API Integration
+
+### Current Implementation
+- **Category-based fallbacks**: 12 curated outdoor recreation categories
+- **Professional imagery**: High-quality Unsplash photos for visual consistency
+- **Graceful loading**: Loading states and error handling for network issues
+
+### Next Phase: Location-Specific Photos
+- **Unsplash API Integration**: Search for location-specific outdoor photography
+- **Proper Attribution**: "Photo by [Photographer] on Unsplash" with links
+- **Download Tracking**: Required for production API access (5,000 requests/hour)
+- **Cost**: $0 vs. $165-550 for stock photos
+
+### Implementation Status
+- [ ] Register Unsplash Developer Account
+- [ ] Implement photo search and attribution system
+- [ ] Add download tracking for production compliance
+- [ ] Apply for production API access
+- [ ] Deploy with location-specific imagery
+
+**Documentation**: See `docs/UNSPLASH_INTEGRATION.md` for technical implementation details.
 
 ## 🚀 Quick Start
 
