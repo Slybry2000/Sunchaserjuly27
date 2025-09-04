@@ -38,6 +38,8 @@ cd c:\Users\bpiar\Projects\Sunchaserjuly27
 pip install -r requirements.txt
 ```
 
+Note: The PNW dataset includes demo rows (ids 101–103) near Seattle for local development and testing.
+
 ### 2. Environment Configuration
 ```bash
 # Copy environment template
@@ -90,6 +92,7 @@ Visit `http://127.0.0.1:8001/docs` for interactive Swagger documentation.
 | `/health`     | GET    | Health check                               | ✅ Complete     |
 | `/geocode`    | GET    | Convert location query to lat/lon           | ✅ Complete     |
 | `/recommend`  | GET    | Get ranked sunny location recommendations   | ✅ Phase A Slice|
+| `/forecasts`  | GET    | Get forecast snapshot data                  | ✅ Complete     |
 | `/docs`       | GET    | Interactive API documentation               | ✅ Complete     |
 
 #### `/recommend` Example
@@ -134,6 +137,52 @@ Sample response:
 - Location dataset with radius filtering
 - Sunshine scoring and ranking
 
+#### `/forecasts` Example
+
+```bash
+curl "http://127.0.0.1:8001/forecasts"
+```
+
+Sample response:
+
+```json
+{
+  "forecasts": [
+    {
+      "id": 1,
+      "location_name": "Mount Rainier",
+      "lat": 46.8523,
+      "lon": -121.7603,
+      "forecast_data": {...}
+    }
+  ],
+  "generated_at": "2025-08-12T05:22:31Z",
+  "etag": "forecast_etag"
+}
+```
+
+**Features:**
+- Snapshot of forecast data
+- ETag for caching
+- SQLite backend with JSON fallback
+
+#### Quick ETag Flow Example
+
+```bash
+# First request - 200 OK with ETag
+curl -i "http://127.0.0.1:8001/recommend?lat=47.6&lon=-122.3&radius=100"
+# HTTP/1.1 200 OK
+# ETag: "abc123etag"
+# Cache-Control: public, max-age=900, stale-while-revalidate=300
+
+# Second request with If-None-Match - 304 Not Modified
+curl -i -H 'If-None-Match: "abc123etag"' "http://127.0.0.1:8001/recommend?lat=47.6&lon=-122.3&radius=100"
+# HTTP/1.1 304 Not Modified
+# ETag: "abc123etag"
+```
+
+This demonstrates client-side caching using ETags.
+
 ## 🧪 Testing
 
 ```bash
@@ -155,6 +204,12 @@ pytest Backend/tests/test_recommend_api.py -v
 - ✅ Error handling and observability middleware
 - ✅ Scoring engine and location filtering
 - 🚫 4 tests skipped due to asyncio deadlock edge cases (non-critical)
+
+**Frontend Testing Matrix** (planned for Phase C):
+- Models: round-trip & example validation for `RecommendResponse`
+- ApiClient: ETag storage, 200→store and 304→use-cached logic
+- Widget states: loading/empty/results/error rendering
+- ETag path: client-side caching with `If-None-Match`
 
 To run the cache-focused tests locally (they rely on asyncio and the in-process
 refresh synchronization), run:
@@ -229,9 +284,9 @@ FastAPI Application
 ```
 
 ### Caching Strategy
-- **Redis**: Production caching with Upstash
-- **Local Fallback**: Development without Redis dependency
-- **TTL**: 7 days for geocoding results
+- **In-Process SWR Cache**: LRU+TTL with stale-while-revalidate and single-flight protection (see `utils/cache.py`)
+- **No Redis Dependency**: Caching is in-process only for simplicity and cost
+- **TTL**: 20 minutes for weather, 7 days for geocoding
 - **Graceful Degradation**: API works without cache
 
 ## 🐳 Docker Deployment
@@ -289,6 +344,12 @@ Phase B frontend work in progress:
 - ETag/304 client-side caching
 - Environment configuration for dev/staging/prod
 - Comprehensive frontend testing with CI
+
+**Phase C Entry Checklist**:
+- [ ] Cache cleanup done: Redis paths removed, in-proc only
+- [ ] CORS enforced: allowlist set, enforcement enabled
+- [ ] Secrets validated: MAPBOX_TOKEN provisioned for staging
+- [ ] Staging smoke green: `staging_smoke.py` passes post-deploy
 
 For detailed technical specifications, see `docs/plan_vertical_slice.md`.
 
