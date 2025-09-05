@@ -139,7 +139,7 @@ def test_frontend_integration():
     print("2. Telemetry endpoint...", end=" ")
     try:
         # Test OPTIONS first (preflight)
-        options_response = requests.options(f"{base_url}/telemetry", timeout=5)
+        requests.options(f"{base_url}/telemetry", timeout=5)
         
         # Test POST with sample data
         sample_telemetry = {
@@ -222,7 +222,7 @@ def test_performance():
             )
             if response.status_code == 200:
                 times.append(time.time() - start)
-        except:
+        except Exception:
             pass
     
     if times:
