@@ -1,30 +1,39 @@
 # Development Runbook
 
-This file documents common environment flags, quick dev commands, and the new Unsplash API integration for photo management.
+This file documents environment setup, development commands, and the production-ready Unsplash API integration.
 
-## Current Development Status
+## ✅ Current Development Status - Production Ready
 
-✅ **Backend**: Production-ready with 71/71 tests passing  
-✅ **Frontend**: Reliability improvements completed, LocationImageService implemented  
-🔄 **Photos**: Transitioning from stock photo strategy to Unsplash API integration  
-📋 **Next**: Implement Unsplash API for location-specific photos
+✅ **Backend**: Production-ready with 16/16 CI checks passing  
+✅ **Frontend**: Flutter app complete with weather integration  
+✅ **Photos**: **Unsplash API integration complete** with production safety  
+✅ **CI/CD**: Full automation with GitHub Actions pipeline  
+🎯 **Next**: Submit Unsplash production API application
 
-## Photo Development Strategy
+## 📸 Photo Integration - Production Complete
 
-### Current Implementation
-- **LocationImageService**: Category-based fallbacks with 12 curated outdoor types
-- **Fallback Chain**: Location-specific → Category → Error state
-- **Frontend**: Proper loading states and error handling
+### ✅ **Unsplash API Implementation Status**
+- **✅ Backend API**: Complete with `/internal/photos/meta` and `/internal/photos/track`
+- **✅ Download Tracking**: Deduplication and proper Unsplash compliance
+- **✅ Attribution System**: Server-side HTML generation with tappable links  
+- **✅ Production Safety**: Mock header hardening and environment gating
+- **✅ CI/CD Integration**: 16/16 automated tests passing
+- **✅ Documentation**: Complete implementation and application guides
 
-### Next Phase: Unsplash API Integration
-1. **Register Unsplash Developer Account** (50 requests/hour for development)
-2. **Implement photo search** for location + category queries
-3. **Add attribution system** with proper "Photo by [Name] on Unsplash" links
-4. **Build download tracking** (required for production API access)
-5. **Apply for production** (5,000 requests/hour after approval)
+### **Development vs Production Configuration**
+```bash
+# Development (without UNSPLASH_CLIENT_ID)
+# - Photo tracking returns tracked: false (safe fallback)
+# - Attribution still works for UI development
+# - Mock headers allowed with ALLOW_TEST_HEADERS=true
 
-**See**: `docs/UNSPLASH_INTEGRATION.md` for detailed technical implementation  
-**See**: `docs/UNSPLASH_PRODUCTION_CHECKLIST.md` for production requirements
+# Production (with UNSPLASH_CLIENT_ID) 
+# - Photo tracking calls Unsplash download endpoint
+# - Full compliance with attribution and tracking requirements
+# - Mock headers disabled for security
+```
+
+**Documentation**: See `docs/UNSPLASH_APPLICATION_MATERIALS.md` for production deployment details
 
 ## Feature Flags
 
