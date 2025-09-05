@@ -31,12 +31,12 @@ def generate_photo_requirements():
     print("📸 Stock Photo Acquisition Requirements")
     print("=" * 50)
     print(f"Target: {len(categories)} category-specific images")
-    print(f"Region: Pacific Northwest (Washington/Oregon)")
-    print(f"Style: Outdoor recreation, sunny weather, vibrant colors")
-    print(f"Format: Landscape orientation, 16:9 or 4:3 aspect ratio")
-    print(f"Resolution: Minimum 800x600, ideally 1200x800 or higher")
+    print("Region: Pacific Northwest (Washington/Oregon)")
+    print("Style: Outdoor recreation, sunny weather, vibrant colors")
+    print("Format: Landscape orientation, 16:9 or 4:3 aspect ratio")
+    print("Resolution: Minimum 800x600, ideally 1200x800 or higher")
     
-    print(f"\n🛒 Shopping List:")
+    print("\n🛒 Shopping List:")
     print("-" * 30)
     
     for i, (category, description) in enumerate(categories.items(), 1):
@@ -47,10 +47,10 @@ def generate_photo_requirements():
         print()
     
     print("💰 Budget Considerations:")
-    print(f"   • Stock photo sites: Shutterstock, Getty, Adobe Stock")
-    print(f"   • Estimated cost: $15-50 per image")
+    print("   • Stock photo sites: Shutterstock, Getty, Adobe Stock")
+    print("   • Estimated cost: $15-50 per image")
     print(f"   • Total budget: $165-550 for all {len(categories)} images")
-    print(f"   • Alternative: Unsplash Plus subscription ($10/month)")
+    print("   • Alternative: Unsplash Plus subscription ($10/month)")
     
     print("\n🎯 Acquisition Strategy:")
     print("   1. Source highest-priority categories first (mountain, forest, lake)")
@@ -58,11 +58,11 @@ def generate_photo_requirements():
     print("   3. Prefer images with people for activity context")
     print("   4. Verify Pacific Northwest geography when possible")
     
-    print(f"\n📁 Implementation:")
-    print(f"   • Save images to: Frontend/assets/images/categories/")
-    print(f"   • Naming convention: [category].jpg")
-    print(f"   • Update pubspec.yaml assets list") 
-    print(f"   • Test with LocationImageService.getCategoryAssetPath()")
+    print("\n📁 Implementation:")
+    print("   • Save images to: Frontend/assets/images/categories/")
+    print("   • Naming convention: [category].jpg")
+    print("   • Update pubspec.yaml assets list") 
+    print("   • Test with LocationImageService.getCategoryAssetPath()")
     
     return categories
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     categories = generate_photo_requirements()
     
     # Generate a quick test
-    print(f"\n🧪 Quick Test:")
+    print("\n🧪 Quick Test:")
     print("Once images are added, test with:")
     print("   flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000")
     print("   Check that location cards show local images instead of external URLs")

@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, Mock
 
 from Backend.services import unsplash_integration as ui

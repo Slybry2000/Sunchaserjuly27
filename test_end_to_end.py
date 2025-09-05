@@ -5,10 +5,8 @@ Tests local backend, API integration, and overall system functionality
 """
 
 import requests
-import json
 import time
 import sys
-from typing import Dict, List
 
 def test_local_backend():
     """Test local backend health and core functionality"""
@@ -39,7 +37,7 @@ def test_local_backend():
             if "python_info" in response.text or response.headers.get('content-type') == 'application/json':
                 print("✅ PASS")
             else:
-                print(f"❌ FAIL (Unexpected content type)")
+                print("❌ FAIL (Unexpected content type)")
                 return False
         else:
             print(f"❌ FAIL ({response.status_code})")
@@ -249,7 +247,7 @@ def run_comprehensive_tests():
     }
     
     # Summary
-    print(f"\n📊 Test Results Summary")
+    print("\n📊 Test Results Summary")
     print("=" * 30)
     passed = sum(results.values())
     total = len(results)

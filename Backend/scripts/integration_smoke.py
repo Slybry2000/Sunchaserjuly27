@@ -15,7 +15,8 @@ import requests
 def run(base_url: str, photo_id: str) -> int:
     # If caller set the wait flag on the function, poll the meta endpoint until ready.
     if getattr(run, 'wait_for_ready', False):
-        import time, requests as _requests
+        import time
+        import requests as _requests
         meta_url = f"{base_url.rstrip('/')}/internal/photos/meta"
         for i in range(12):
             try:

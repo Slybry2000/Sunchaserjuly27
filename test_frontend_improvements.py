@@ -2,7 +2,6 @@
 """Test the frontend improvements by simulating API calls"""
 
 import requests
-import json
 
 # Test the backend API that the frontend will call
 api_base = "http://127.0.0.1:8000"
@@ -59,5 +58,5 @@ print("✅ Category-based images (Unsplash curated vs random Picsum)")
 print("✅ Loading indicators for images")
 print("✅ Better error messages")
 
-print(f"\n🎯 Next: Test the Flutter app to see these improvements in action")
-print(f"   Run: cd Frontend && flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:8000")
+print("\n🎯 Next: Test the Flutter app to see these improvements in action")
+print("   Run: cd Frontend && flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:8000")
