@@ -9,10 +9,13 @@
   - [ ] Use `photo.urls.small` for thumbnails
   - [ ] Never cache or store Unsplash images locally
   
-- [ ] **Download Tracking**: Trigger download endpoint when users view photos
-  - [ ] Implement `triggerDownload()` function
-  - [ ] Call download endpoint when photo is displayed
-  - [ ] Track each unique photo view (not duplicate views)
+ - [x] **Download Tracking**: Trigger download endpoint when users view photos
+   - [x] Implement `triggerDownload()` function (backend helper added in `Backend/services/unsplash_integration.py` and unit-tested)
+    - [ ] Call download endpoint when photo is displayed (frontend wiring required)
+   - [x] Track each unique photo view (not duplicate views) — implemented server-side dedupe using in-process TTL cache
+   - [x] Add a small backend endpoint to centralize tracking so the Client-ID is never exposed to clients (`/internal/photos/track`)
+   - [x] Add integration-style tests: server-side meta endpoint + track flow added (`/internal/photos/meta` and test in `Backend/tests/test_unsplash_router.py`)
+   - [x] Instrument tracking endpoint with basic metrics (success/failure counters)
   
 - [ ] **Visual Distinction**: App must not resemble Unsplash
   - [ ] No Unsplash logo in app UI
@@ -25,6 +28,8 @@
   - [ ] Photographer name links to their Unsplash profile
   - [ ] "Unsplash" text links to photo's Unsplash page
   - [ ] Attribution visible on every photo
+  - [x] Server-side helper `build_attribution_html(photo)` added in `Backend/services/unsplash_integration.py` (unit-tested)
+  - [ ] Frontend must render attribution visibly for each photo and ensure links are tappable
 
 ### 📱 App Information
 - [ ] **Application Name**: "Sun Chaser" (confirmed distinct from Unsplash)
@@ -125,16 +130,71 @@ Widget buildAttribution(UnsplashPhoto photo) {
 
 ### 🧪 Testing Requirements
 - [ ] Test photo hotlinking works correctly
-- [ ] Verify download tracking is called for each photo view
-- [ ] Confirm attribution links work and open correct pages
+ - [ ] Verify download tracking is called for each photo view
+   - [x] Backend unit tests added for the helper (see `Backend/tests/test_unsplash_integration.py`)
+   - [ ] Add an integration test that simulates a frontend-visible render triggering a backend track call
+ - [x] Confirm attribution links work and open correct pages (helper returns correct links; frontend rendering still required)
 - [ ] Test app functionality without Unsplash branding
 - [ ] Validate photo search returns relevant results
+ - [ ] Frontend wiring: implement visible-once tracking and render attribution (example doc added; implementation required in frontend app)
 
 ### 📋 Documentation Review  
 - [ ] Review Unsplash API Guidelines in full
 - [ ] Confirm app meets all technical requirements
 - [ ] Verify attribution implementation matches guidelines
 - [ ] Check that app description is accurate and complete
+
+### Implementation notes / status
+- Backend helpers added:
+  - `Backend/services/unsplash_integration.py` — trigger tracking + build attribution HTML
+  - `Backend/tests/test_unsplash_integration.py` — unit tests (3 passing)
+ - Backend routes added:
+   - `POST /internal/photos/track` — deduped tracking endpoint (see `Backend/routers/unsplash.py`)
+   - `GET /internal/photos/meta` — server-side metadata + attribution helper for frontend (see `Backend/routers/unsplash.py`)
+ - Integration-style test added: `Backend/tests/test_unsplash_router.py` includes a meta -> track flow test and TTL expiry test (all passing)
+- Docs added: `docs/UNSPLASH_IMPLEMENTATION.md` with wiring suggestions for frontend/backend.
+ - Frontend example doc added: `docs/UNSPLASH_FRONTEND_EXAMPLE.md` (contains Flutter/Dart wiring sample and screenshot guidance)
+ - API README added: `docs/UNSPLASH_API_README.md` (endpoints, env vars, examples)
+ - PR summary added: `docs/UNSPLASH_PR_SUMMARY.md` (changed files, test commands, reviewer checklist)
+ - Local tests: all new backend tests passing locally (see `Backend/tests/*`)
+
+### PR and CI steps (new tasks)
+- [ ] Prepare a PR branch and include this checklist as part of the PR description
+- [ ] Branch created locally: `feature/unsplash-tracking` (will be created and committed locally)
+- [ ] Add a CI job to run `pytest` for `Backend/tests/*` and fail fast on regressions
+- [ ] Add a smoke job that runs the FastAPI app and calls `/internal/photos/meta` and `/internal/photos/track` (integration smoke)
+- [ ] Add a secret rotation note: ensure `UNSPLASH_CLIENT_ID` is stored in the environment/secrets manager and not in repo
+
+### Frontend / release tasks (new)
+- [ ] Implement frontend wiring per `docs/UNSPLASH_FRONTEND_EXAMPLE.md` in the Flutter app and capture the 3 required screenshots
+- [ ] Add a CI job (or manual job) to verify screenshot generation and attach them to the PR
+- [ ] Security review: confirm no Client-ID or secrets are present in frontend bundles
+
+### Release readiness checklist (new)
+- [ ] All tests passing in CI (unit + integration smoke)
+- [ ] Screenshots attached to PR demonstrating attribution and UI
+- [ ] Secrets provisioned in production/staging
+- [ ] Monitoring (metrics) visible in staging dashboards
+
+### New tasks discovered (recommended ordering)
+1. Add a backend route (POST `/v1/photos/track`) that accepts a photo id or `download_location` and calls `trigger_photo_download` server-side. This centralizes Client-ID usage and avoids exposing it to clients.
+2. Implement session-level debouncing / dedupe for track calls to avoid duplicate tracking for the same photo within short time windows.
+3. Add integration tests that exercise the tracking endpoint together with a small frontend simulator (or headless Flutter integration test) to show download tracking fires only on first visible render.
+  - a. Completed a server-side integration-style test; next is a headless frontend/integration test or actual frontend implementation.
+4. Add frontend wiring and screenshots:
+  - a. Show the frontend using `photo.urls.regular` for images (hotlinking)
+  - b. Show the frontend calling the backend track endpoint when the photo first becomes visible
+  - c. Take required screenshots for the Unsplash submission (attribution visible, tappable links, app UI distinct from Unsplash)
+  - d. Example wiring doc added in `docs/UNSPLASH_FRONTEND_EXAMPLE.md` to guide implementation and screenshots
+    - e. API README added in `docs/UNSPLASH_API_README.md` to document endpoints, env vars, and examples
+5. Secrets and deployment:
+  - a. Ensure the Unsplash Client-ID is injected server-side from a secrets manager or environment variable (do not commit keys)
+  - b. After production approval, swap to production API keys and monitor rate limits
+6. Observability / QA:
+  - a. Instrument tracking endpoint with metrics (success/fail counts, latency)
+  - b. Add alerts for unusual failure rates or throttling responses from Unsplash
+
+If you'd like, I can implement task 1 (backend route + small in-memory dedupe) next and add the integration test.
 
 ### 🎯 Quality Assurance
 - [ ] App provides value beyond just displaying Unsplash photos
