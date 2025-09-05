@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Header
 from pydantic import BaseModel
 from typing import Optional
 import logging
@@ -26,7 +26,7 @@ def _make_key(payload: TrackRequest) -> Optional[str]:
 
 
 @router.post('/internal/photos/track')
-async def track_photo(payload: TrackRequest = Body(...)):
+async def track_photo(payload: TrackRequest = Body(...), x_test_mock_trigger: Optional[str] = Header(None)):
     """Track a photo view. Centralizes the Unsplash download tracking call
     so the Client-ID remains server-side and de-duplicates repeated calls
     within a short TTL.
@@ -60,7 +60,24 @@ async def track_photo(payload: TrackRequest = Body(...)):
 
     ACCESS_KEY = os.environ.get('UNSPLASH_CLIENT_ID')
     metrics_incr('unsplash.track.requests_total')
-    ok = ui.trigger_photo_download(download_location, ACCESS_KEY)
+
+    # Support an internal test header which allows CI/tests to force a
+    # successful trigger without making external network requests.
+    # Hardening: only honor the mock header when the deployment explicitly
+    # enables `ALLOW_TEST_HEADERS=true` and the provided header value matches
+    # the server-side secret `UNSPLASH_TEST_HEADER_SECRET`.
+    allow_test_headers = os.environ.get('ALLOW_TEST_HEADERS', '').lower() in ('1', 'true', 'yes')
+    test_header_secret = os.environ.get('UNSPLASH_TEST_HEADER_SECRET')
+
+    if allow_test_headers and test_header_secret and x_test_mock_trigger and x_test_mock_trigger == test_header_secret:
+        # Log mock usage at info level for auditability; don't log secret value.
+        logger.info('Mock Unsplash trigger honored for key=%s (test header used)', key)
+        ok = True
+    else:
+        # If a test header was provided but not honored, log at debug for troubleshooting
+        if x_test_mock_trigger:
+            logger.debug('Mock header provided but not honored (allow=%s, secret_set=%s)', allow_test_headers, bool(test_header_secret))
+        ok = ui.trigger_photo_download(download_location, ACCESS_KEY)
     if ok:
         metrics_incr('unsplash.track.success_total')
     else:

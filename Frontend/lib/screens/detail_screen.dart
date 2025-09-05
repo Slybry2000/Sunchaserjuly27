@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:sunshine_spotter/services/data_service.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -13,6 +15,41 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMixin {
   late SunshineSpot spot;
+  String? _attributionHtml;
+  bool _tracked = false;
+
+  Future<void> _fetchMeta() async {
+    try {
+      final base = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+      final uri = Uri.parse(base).replace(path: '/internal/photos/meta', queryParameters: {'photo_id': spot.id});
+      final resp = await http.get(uri).timeout(const Duration(seconds: 3));
+      if (resp.statusCode == 200) {
+        final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        setState(() {
+          _attributionHtml = json['attribution_html'] as String?;
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  Future<void> _track() async {
+    if (_tracked) return;
+    _tracked = true;
+    try {
+      final base = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+      final uri = Uri.parse(base).replace(path: '/internal/photos/track');
+      final body = jsonEncode({'photo_id': spot.id});
+      await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 2));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  String _stripHtml(String html) {
+    return html.replaceAll(RegExp(r'<[^>]+>'), '');
+  }
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -21,6 +58,7 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
     spot = widget.spot;
+  _fetchMeta();
     
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -111,6 +149,14 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
                   Image.network(
                     spot.imageUrl,
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        // finished loading
+                        _track();
+                        return child;
+                      }
+                      return child;
+                    },
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -128,6 +174,15 @@ class _DetailScreenState extends State<DetailScreen> with TickerProviderStateMix
               ),
             ),
           ),
+
+          // Attribution below the image (optional)
+          if (_attributionHtml != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Text(_stripHtml(_attributionHtml!)),
+              ),
+            ),
           
           // Content
           SliverToBoxAdapter(

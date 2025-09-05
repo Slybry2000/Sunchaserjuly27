@@ -109,3 +109,42 @@ def test_integration_meta_then_track(mock_trigger):
     metrics = get_metrics()
     assert metrics.get('unsplash.track.requests_total', 0) >= 1
     assert metrics.get('unsplash.track.success_total', 0) >= 1
+
+
+@patch('Backend.routers.unsplash.ui.trigger_photo_download')
+def test_mock_header_hardening_accepts_when_allowed(mock_trigger):
+    """When ALLOW_TEST_HEADERS and UN_SPLASH_TEST_HEADER_SECRET are set,
+    providing the matching header value should simulate success.
+    """
+    # Ensure trigger wouldn't be called (we simulate via header)
+    mock_trigger.side_effect = Exception("should not be called")
+
+    # Enable allow and set secret
+    os.environ['ALLOW_TEST_HEADERS'] = 'true'
+    os.environ['UNSPLASH_TEST_HEADER_SECRET'] = 'ci-secret-123'
+
+    payload = {'download_location': 'https://api.unsplash.com/photos/xyz/download'}
+    headers = {'X-Test-Mock-Trigger': 'ci-secret-123'}
+    r = client.post('/internal/photos/track', json=payload, headers=headers)
+    assert r.status_code == 200
+    assert r.json().get('tracked') is True
+
+
+@patch('Backend.routers.unsplash.ui.trigger_photo_download')
+def test_mock_header_rejected_when_not_allowed(mock_trigger):
+    """If ALLOW_TEST_HEADERS is not set or secret mismatches, header must be ignored and trigger called.
+    """
+    mock_trigger.return_value = True
+
+    # Ensure gating disabled
+    if 'ALLOW_TEST_HEADERS' in os.environ:
+        del os.environ['ALLOW_TEST_HEADERS']
+    if 'UNSPLASH_TEST_HEADER_SECRET' in os.environ:
+        del os.environ['UNSPLASH_TEST_HEADER_SECRET']
+
+    payload = {'download_location': 'https://api.unsplash.com/photos/xyz/download'}
+    headers = {'X-Test-Mock-Trigger': 'ci-secret-123'}
+    r = client.post('/internal/photos/track', json=payload, headers=headers)
+    assert r.status_code == 200
+    # trigger_photo_download was called (mock returns True)
+    assert r.json().get('tracked') is True
