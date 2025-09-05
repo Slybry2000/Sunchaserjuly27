@@ -13,6 +13,7 @@ from Backend.routers.recommend import router as recommend_router
 from Backend.routers.internal import router as internal_router
 from Backend.routers.forecasts import router as forecasts_router
 from Backend.routers.telemetry import router as telemetry_router
+from Backend.routers.unsplash import router as unsplash_router
 from Backend.models.errors import ErrorPayload, UpstreamError, LocationNotFound, SchemaError, TimeoutBudgetExceeded
 from Backend.services.metrics import prometheus_metrics, get_metrics
 
@@ -141,6 +142,7 @@ app.include_router(recommend_router)
 app.include_router(internal_router)
 app.include_router(forecasts_router)
 app.include_router(telemetry_router)
+app.include_router(unsplash_router)
 
 # Add observability middleware
 app.add_middleware(cast(_Any, ObservabilityMiddleware))

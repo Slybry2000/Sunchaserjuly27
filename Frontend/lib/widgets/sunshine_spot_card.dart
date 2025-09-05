@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
 
-class SunshineSpotCard extends StatelessWidget {
+class SunshineSpotCard extends StatefulWidget {
   final SunshineSpot spot;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
@@ -14,15 +16,59 @@ class SunshineSpotCard extends StatelessWidget {
   });
 
   @override
+  State<SunshineSpotCard> createState() => _SunshineSpotCardState();
+}
+
+class _SunshineSpotCardState extends State<SunshineSpotCard> {
+  String? _attributionHtml;
+  bool _tracked = false;
+
+  Future<void> _fetchMeta() async {
+    try {
+      final base = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+      final uri = Uri.parse(base).replace(path: '/internal/photos/meta', queryParameters: {'photo_id': widget.spot.id});
+      final resp = await http.get(uri).timeout(const Duration(seconds: 3));
+      if (resp.statusCode == 200) {
+        final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        setState(() {
+          _attributionHtml = json['attribution_html'] as String?;
+        });
+      }
+    } catch (e) {
+      // ignore network errors; attribution is optional
+    }
+  }
+
+  Future<void> _track() async {
+    if (_tracked) return;
+    _tracked = true;
+    try {
+  final base = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+  final uri = Uri.parse(base).replace(path: '/internal/photos/track');
+      final body = jsonEncode({'photo_id': widget.spot.id});
+      await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 2));
+    } catch (e) {
+      // swallow errors
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMeta();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final spot = widget.spot;
     
-    return Card(
+  return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
+    onTap: widget.onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,7 +83,11 @@ class SunshineSpotCard extends StatelessWidget {
                       spot.imageUrl,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
+                        if (loadingProgress == null) {
+                          // Image finished loading, fire tracking once
+                          _track();
+                          return child;
+                        }
                         return Container(
                           color: Colors.grey.shade200,
                           child: const Center(
@@ -101,7 +151,7 @@ class SunshineSpotCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        onPressed: onFavoriteToggle,
+                        onPressed: widget.onFavoriteToggle,
                         icon: Icon(
                           spot.isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: spot.isFavorite ? Colors.red : Colors.grey[600],
@@ -193,6 +243,18 @@ class SunshineSpotCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   
+                  // Attribution (fetched from backend, optional)
+                  if (_attributionHtml != null) ...[
+                    const SizedBox(height: 8),
+                    // Simple rendering: strip basic HTML and show as tappable link if present
+                    RichText(
+                      text: TextSpan(
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
+                        children: _buildAttributionSpans(_attributionHtml!, theme),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 12),
                   
                   // Stats row
@@ -266,5 +328,30 @@ class SunshineSpotCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<InlineSpan> _buildAttributionSpans(String html, ThemeData theme) {
+    // Very small helper: convert simple anchor tags to visible link text.
+    // Example input: 'Photo by <a href="...">Name</a> on <a href="...">Unsplash</a>'
+    try {
+      final reg = RegExp(r'<a[^>]*>([^<]+)<\/a>', caseSensitive: false);
+      final matches = reg.allMatches(html).toList();
+      if (matches.isEmpty) return [TextSpan(text: html)];
+
+      List<InlineSpan> spans = [];
+      int last = 0;
+      for (final m in matches) {
+        if (m.start > last) {
+          spans.add(TextSpan(text: html.substring(last, m.start)));
+        }
+        final linkText = m.group(1) ?? '';
+        spans.add(TextSpan(text: linkText, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)));
+        last = m.end;
+      }
+      if (last < html.length) spans.add(TextSpan(text: html.substring(last)));
+      return spans;
+    } catch (e) {
+      return [TextSpan(text: html)];
+    }
   }
 }
