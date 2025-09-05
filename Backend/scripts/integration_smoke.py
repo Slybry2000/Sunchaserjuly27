@@ -9,7 +9,6 @@ Exit code: 0 on success, 2 on failure.
 """
 import argparse
 import sys
-from typing import Any
 import requests
 
 
