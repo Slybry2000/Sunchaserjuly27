@@ -9,12 +9,13 @@ Exit code: 0 on success, 2 on failure.
 """
 import argparse
 import sys
+from typing import Any
 import requests
 
 
-def run(base_url: str, photo_id: str) -> int:
-    # If caller set the wait flag on the function, poll the meta endpoint until ready.
-    if getattr(run, 'wait_for_ready', False):
+def run(base_url: str, photo_id: str, wait_for_ready: bool = False, mock_trigger: bool = False) -> int:
+    # If caller set the wait flag, poll the meta endpoint until ready.
+    if wait_for_ready:
         import time
         import requests as _requests
         meta_url = f"{base_url.rstrip('/')}/internal/photos/meta"
@@ -59,7 +60,7 @@ def run(base_url: str, photo_id: str) -> int:
     # If the caller asked to mock trigger, send the CI secret value in the
     # header so the server can validate it before honoring the simulated
     # success. The secret should be provided in CI as UNSPLASH_TEST_HEADER_SECRET.
-    if getattr(run, "mock_trigger", False):
+    if mock_trigger:
         secret = None
         # Prefer the CI-provided env var
         import os
@@ -114,9 +115,6 @@ if __name__ == '__main__':
     p.add_argument('--wait', action='store_true', help='Poll the meta endpoint until the server is ready before running the smoke steps')
     args = p.parse_args()
 
-    # Attach flags to the function so inner code can read them.
-    run.mock_trigger = args.mock_trigger
-    run.wait_for_ready = args.wait
-
-    rc = run(args.base_url, args.photo_id)
+    # Run the test with parsed arguments
+    rc = run(args.base_url, args.photo_id, args.wait, args.mock_trigger)
     sys.exit(rc)

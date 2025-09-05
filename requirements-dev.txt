@@ -8,6 +8,7 @@ ruff==0.12.9
 
 # Static type checking
 mypy==1.6.1
+types-requests==2.31.0.20240905
 
 # Testing
 # NOTE: upgraded pytest and pytest-httpx to a coordinated set that allows

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body, Header
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 import os
 
@@ -77,7 +77,13 @@ async def track_photo(payload: TrackRequest = Body(...), x_test_mock_trigger: Op
         # If a test header was provided but not honored, log at debug for troubleshooting
         if x_test_mock_trigger:
             logger.debug('Mock header provided but not honored (allow=%s, secret_set=%s)', allow_test_headers, bool(test_header_secret))
-        ok = ui.trigger_photo_download(download_location, ACCESS_KEY)
+        
+        # Ensure we have required parameters for the real API call
+        if download_location and ACCESS_KEY:
+            ok = ui.trigger_photo_download(download_location, ACCESS_KEY)
+        else:
+            logger.error('Missing required parameters: download_location=%s, ACCESS_KEY=%s', bool(download_location), bool(ACCESS_KEY))
+            ok = False
     if ok:
         metrics_incr('unsplash.track.success_total')
     else:
@@ -96,7 +102,7 @@ async def photo_meta(photo_id: str):
     snippet created by `build_attribution_html`.
     """
     # Build a simple synthetic photo object for demo/testing purposes
-    photo = {
+    photo: Dict[str, Any] = {
         "id": photo_id,
         "urls": {"regular": f"https://images.unsplash.com/{photo_id}?auto=format&fit=crop"},
         "links": {"html": f"https://unsplash.com/photos/{photo_id}",
