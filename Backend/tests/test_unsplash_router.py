@@ -22,6 +22,7 @@ def test_track_missing_fields():
 
 
 @patch('Backend.routers.unsplash.ui.trigger_photo_download')
+@patch.dict('os.environ', {'UNSPLASH_CLIENT_ID': 'test_access_key'})
 def test_track_success_and_dedupe(mock_trigger):
     mock_trigger.return_value = True
 
@@ -53,6 +54,7 @@ def test_track_failure(mock_trigger):
     assert metrics.get('unsplash.track.failure_total', 0) == 1
 
 
+@patch.dict('os.environ', {'UNSPLASH_CLIENT_ID': 'test_access_key'})
 @patch('Backend.routers.unsplash.ui.trigger_photo_download')
 def test_dedupe_ttl_expiry(mock_trigger):
     # Use a very small TTL so we can test expiry
@@ -79,6 +81,7 @@ def test_dedupe_ttl_expiry(mock_trigger):
     assert metrics.get('unsplash.track.success_total', 0) == 2
 
 
+@patch.dict('os.environ', {'UNSPLASH_CLIENT_ID': 'test_access_key'})
 @patch('Backend.routers.unsplash.ui.trigger_photo_download')
 def test_integration_meta_then_track(mock_trigger):
     """Integration-style test: simulate frontend flow:
@@ -130,6 +133,7 @@ def test_mock_header_hardening_accepts_when_allowed(mock_trigger):
     assert r.json().get('tracked') is True
 
 
+@patch.dict('os.environ', {'UNSPLASH_CLIENT_ID': 'test_access_key'})
 @patch('Backend.routers.unsplash.ui.trigger_photo_download')
 def test_mock_header_rejected_when_not_allowed(mock_trigger):
     """If ALLOW_TEST_HEADERS is not set or secret mismatches, header must be ignored and trigger called.
