@@ -71,17 +71,17 @@ proper attribution to photographers while driving traffic back to Unsplash.
 ### 📸 Required Screenshots
 Create screenshots showing:
 
-1. **Photo Attribution Example**
+1. **Photo Attribution Example** (`attribution_example.png`)
    - Screenshot showing "Photo by [Name] on Unsplash" 
    - Demonstrate clickable links to photographer and Unsplash
    - Show attribution is clearly visible and properly formatted
 
-2. **App Interface**
+2. **App Interface** (`app_interface.png`)
    - Main app screen showing location recommendations
    - Demonstrate visual distinction from Unsplash interface
    - Show app branding and unique design elements
 
-3. **Photo Integration**
+3. **Photo Integration** (`photo_integration.png`)
    - Location cards with Unsplash photos
    - Show how photos enhance location discovery experience
    - Demonstrate photos are hotlinked (not locally stored)
@@ -220,7 +220,7 @@ These four small changes will let CI verify the tracked:true branch safely and m
 
 ### 🎯 Next Immediate Steps (Priority Order)
 1. **Link Tappability** - Implement `url_launcher` for attribution links  
-2. **Screenshot Capture** - Take required Unsplash application screenshots
+2. **Screenshot Capture** - (Automated via workflow `Frontend Screenshots`) collect and attach artifacts
 3. **Application Submission** - Submit to Unsplash Developer Portal
 4. **Production Deployment** - After approval, deploy with production keys
 5. **Visual Distinction Review** - Formal UX pass
