@@ -1,17 +1,18 @@
-from typing import Any, Dict, List, Optional
 import asyncio
+import logging
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter
 from pydantic import BaseModel
-import logging
 
 from Backend.services.telemetry_sink import (
-    sink_event_jsonl,
-    sink_event_forward_http,
     enqueue_event,
+    sink_event_forward_http,
+    sink_event_jsonl,
 )
 
 router = APIRouter()
-logger = logging.getLogger('sunshine_backend.telemetry')
+logger = logging.getLogger("sunshine_backend.telemetry")
 
 
 class TelemetryEvent(BaseModel):
@@ -26,11 +27,11 @@ _RECENT_EVENTS: List[Dict[str, Any]] = []
 _MAX_EVENTS = 200
 
 
-@router.post('/telemetry', status_code=202)
+@router.post("/telemetry", status_code=202)
 async def ingest(event: TelemetryEvent):
     payload = event.model_dump()
     # Log structured-ish message for downstream log processors
-    logger.info('ingest', extra={'telemetry': payload})
+    logger.info("ingest", extra={"telemetry": payload})
 
     # Keep a small in-memory buffer for quick inspection in dev
     try:
@@ -38,7 +39,7 @@ async def ingest(event: TelemetryEvent):
         if len(_RECENT_EVENTS) > _MAX_EVENTS:
             _RECENT_EVENTS.pop(0)
     except Exception:
-        logger.exception('Failed to append telemetry to buffer')
+        logger.exception("Failed to append telemetry to buffer")
 
     # Enqueue for batching if available; otherwise fallback to immediate sink
     try:
@@ -50,12 +51,12 @@ async def ingest(event: TelemetryEvent):
             asyncio.ensure_future(sink_event_jsonl(payload))
             asyncio.ensure_future(sink_event_forward_http(payload))
         except Exception:
-            logger.exception('Failed to schedule telemetry sinks')
+            logger.exception("Failed to schedule telemetry sinks")
 
-    return {'status': 'accepted'}
+    return {"status": "accepted"}
 
 
-@router.get('/telemetry/recent')
+@router.get("/telemetry/recent")
 async def recent():
     # Expose recent events for quick debugging (do not enable in production)
-    return {'count': len(_RECENT_EVENTS), 'events': _RECENT_EVENTS}
+    return {"count": len(_RECENT_EVENTS), "events": _RECENT_EVENTS}

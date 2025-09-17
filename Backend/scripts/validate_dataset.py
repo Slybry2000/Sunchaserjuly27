@@ -1,8 +1,18 @@
 import csv
 from pathlib import Path
 
+
 def validate_csv(path: str) -> bool:
-    required = ["id", "name", "lat", "lon", "elevation", "category", "state", "timezone"]
+    required = [
+        "id",
+        "name",
+        "lat",
+        "lon",
+        "elevation",
+        "category",
+        "state",
+        "timezone",
+    ]
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader, 1):
@@ -20,7 +30,13 @@ def validate_csv(path: str) -> bool:
     print("Validation passed.")
     return True
 
+
 if __name__ == "__main__":
     import sys
-    path = sys.argv[1] if len(sys.argv) > 1 else str(Path(__file__).parent.parent / "data" / "pnw.csv")
+
+    path = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else str(Path(__file__).parent.parent / "data" / "pnw.csv")
+    )
     validate_csv(path)

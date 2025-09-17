@@ -10,9 +10,9 @@ deployments where in-process caching provides better performance and
 reduced complexity.
 """
 
+import inspect
 from functools import wraps
 from typing import Any, Callable
-import inspect
 
 from .cache_inproc import cache
 
@@ -35,7 +35,9 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            cache_key = f"{key_prefix}:{func.__name__}:{hash(str(args) + str(kwargs))}"
+            cache_key = (
+                f"{key_prefix}:{func.__name__}:" + str(hash(str(args) + str(kwargs)))
+            )
 
             # Try cache get
             try:
@@ -74,7 +76,9 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
     return decorator
 
 
-async def get_or_set(key: str, factory: Callable, ttl: int = 3600, stale_reval: int = 300) -> tuple[Any, str]:
+async def get_or_set(
+    key: str, factory: Callable, ttl: int = 3600, stale_reval: int = 300
+) -> tuple[Any, str]:
     """Get value from cache or set it using the factory function.
 
     Args:
@@ -84,7 +88,7 @@ async def get_or_set(key: str, factory: Callable, ttl: int = 3600, stale_reval: 
         stale_reval: Stale-while-revalidate time in seconds
 
     Returns:
-        Tuple of (cached_value, status) where status is 'miss', 'hit_fresh', or 'hit_stale'
+    Tuple of (cached_value, status) where status is 'miss' or 'hit'
     """
     # Use the in-process cache's native get_or_set which handles SWR internally
     if hasattr(cache, "get_status"):

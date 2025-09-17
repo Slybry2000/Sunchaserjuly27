@@ -1,10 +1,12 @@
 """
 Geocoding service using Mapbox API
 """
+
 import os
+from typing import Any, Mapping
 
 import httpx
-from typing import Mapping, Any
+
 from Backend.models.errors import LocationNotFound
 
 
@@ -26,7 +28,7 @@ async def geocode(query: str) -> tuple[float, float]:
         # Development convenience: allow a small local mapping when explicitly enabled.
         dev_allow = os.getenv("DEV_ALLOW_GEOCODE", "").lower() in ("1", "true", "yes")
         if dev_allow:
-            # Simple, small mapping for common test queries. Keep this intentionally tiny.
+            # Small mapping for common test queries (kept intentionally tiny).
             fallback = {
                 "seattle": (47.6062, -122.3321),
                 "seattle, wa": (47.6062, -122.3321),
@@ -42,10 +44,7 @@ async def geocode(query: str) -> tuple[float, float]:
         raise ValueError("MAPBOX_TOKEN environment variable not set")
 
     url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json"
-    params: Mapping[str, Any] = {
-        "access_token": mapbox_token,
-        "limit": 1
-    }
+    params: Mapping[str, Any] = {"access_token": mapbox_token, "limit": 1}
 
     async with httpx.AsyncClient() as client:
         try:
@@ -66,4 +65,6 @@ async def geocode(query: str) -> tuple[float, float]:
         except httpx.RequestError as e:
             raise LocationNotFound(f"Geocoding request failed: {e}") from e
         except httpx.HTTPStatusError as e:
-            raise LocationNotFound(f"Geocoding API error: {e.response.status_code}") from e
+            raise LocationNotFound(
+                f"Geocoding API error: {e.response.status_code}"
+            ) from e

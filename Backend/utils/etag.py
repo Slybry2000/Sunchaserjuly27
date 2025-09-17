@@ -14,19 +14,16 @@ def _default_float_converter(o):
     # str() for other unknown types to avoid serialization errors.
     if isinstance(o, Decimal):
         # normalize to a fixed string representation without scientific notation
-        return format(o, 'f')
+        return format(o, "f")
     return str(o)
 
 
 def strong_etag_for_obj(obj) -> str:
-    """Canonicalize a Python object to deterministic JSON bytes and return a quoted SHA-256 ETag.
+    """Canonicalize object to deterministic JSON bytes and return quoted SHA-256 ETag.
 
-    Rules:
-    - Sort object keys (sort_keys=True)
-    - Minify separators (separators=(",", ":"))
-    - Use Decimal for precise float formatting where possible
-    - Use a stable default serializer for non-standard types
+    Rules: sort keys, minify separators, stable float formatting.
     """
+
     # Convert floats to Decimal to avoid differences in float repr across runs
     def _convert(o):
         if isinstance(o, float):
@@ -38,6 +35,10 @@ def strong_etag_for_obj(obj) -> str:
         return o
 
     converted = _convert(obj)
-    payload = json.dumps(converted, sort_keys=True, separators=(',', ':'), default=_default_float_converter)
-    return strong_etag(payload.encode('utf-8'))
-
+    payload = json.dumps(
+        converted,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=_default_float_converter,
+    )
+    return strong_etag(payload.encode("utf-8"))

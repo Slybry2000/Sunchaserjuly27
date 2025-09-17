@@ -1,10 +1,13 @@
-import os
 import logging
-from tenacity import retry, stop_after_attempt, wait_random, before_sleep_log
-from typing import TypedDict, List, Tuple
+import os
+from typing import List, Tuple, TypedDict
+
 import httpx
-from Backend.utils.cache_inproc import InProcessCache
+from tenacity import before_sleep_log, retry, stop_after_attempt, wait_random
+
 from Backend.models.errors import UpstreamError
+from Backend.utils.cache_inproc import InProcessCache
+
 
 # Backwards-compatible alias expected by some tests
 class WeatherError(UpstreamError):
@@ -18,14 +21,21 @@ async def get_weather(lat: float, lon: float) -> dict:
     raw = await fetch_weather(lat, lon)
     return raw
 
+
 logger = logging.getLogger("weather")
+
 
 class WeatherSlot(TypedDict):
     ts_local: str
     cloud_pct: int
     temp_f: float
 
-@retry(stop=stop_after_attempt(2), wait=wait_random(min=0.2, max=0.4), before_sleep=before_sleep_log(logger, logging.WARNING))
+
+@retry(
+    stop=stop_after_attempt(2),
+    wait=wait_random(min=0.2, max=0.4),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 async def fetch_weather_raw(lat: float, lon: float) -> dict:
     url = (
         "https://api.open-meteo.com/v1/forecast"
@@ -51,6 +61,7 @@ async def fetch_weather_raw(lat: float, lon: float) -> dict:
 async def fetch_weather(lat: float, lon: float) -> dict:
     return await fetch_weather_raw(lat, lon)
 
+
 def parse_weather(payload: dict) -> List[WeatherSlot]:
     hourly = payload.get("hourly", {})
     times = hourly.get("time", [])
@@ -59,19 +70,23 @@ def parse_weather(payload: dict) -> List[WeatherSlot]:
     assert len(times) == len(clouds) == len(temps)
     out: List[WeatherSlot] = []
     for i in range(min(len(times), 48)):
-        out.append({
-            "ts_local": times[i],
-            "cloud_pct": int(clouds[i]),
-            "temp_f": float(temps[i]),
-        })
+        out.append(
+            {
+                "ts_local": times[i],
+                "cloud_pct": int(clouds[i]),
+                "temp_f": float(temps[i]),
+            }
+        )
     return out
+
 
 _weather_cache = InProcessCache(maxsize=256, default_ttl=1200, default_swr=600)
 
+
 async def get_weather_cached(lat: float, lon: float) -> Tuple[List[WeatherSlot], str]:
     key = f"wx:{round(lat,4)}:{round(lon,4)}"
-    ttl = int(os.getenv("WEATHER_TTL_SEC","1200"))
-    swr = int(os.getenv("WEATHER_STALE_REVAL_SEC","600"))
+    ttl = int(os.getenv("WEATHER_TTL_SEC", "1200"))
+    swr = int(os.getenv("WEATHER_STALE_REVAL_SEC", "600"))
 
     async def producer():
         try:

@@ -1,13 +1,14 @@
 """
 In-process cache with SWR (Stale-While-Revalidate) support
 """
+
 import asyncio
+import logging
 import os
 import time
-from typing import Any, Callable, Optional
 from dataclasses import dataclass
 from threading import Lock
-import logging
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CacheEntry:
     """Cache entry with TTL and SWR support"""
+
     value: Any
     created_at: float
     ttl_seconds: int
@@ -41,15 +43,17 @@ class CacheEntry:
 class InProcessCache:
     """
     In-process LRU cache with TTL and Stale-While-Revalidate support
-    
+
     Features:
     - LRU eviction when maxsize is reached
     - TTL-based expiration
     - SWR: serve stale data while refreshing in background
     - Single-flight: prevent duplicate concurrent requests for same key
     """
-    
-    def __init__(self, maxsize: int = 1000, default_ttl: int = 300, default_swr: int = 60):
+
+    def __init__(
+        self, maxsize: int = 1000, default_ttl: int = 300, default_swr: int = 60
+    ):
         self.maxsize = maxsize
         self.default_ttl = default_ttl
         self.default_swr = default_swr
@@ -64,7 +68,7 @@ class InProcessCache:
         for key, entry in self._cache.items():
             if entry.should_evict:
                 to_remove.append(key)
-        
+
         for key in to_remove:
             self._remove_key(key)
 
@@ -91,13 +95,13 @@ class InProcessCache:
         """Get value from cache"""
         with self._lock:
             self._evict_expired()
-            
+
             if key not in self._cache:
                 return None
-            
+
             entry = self._cache[key]
             self._update_access_order(key)
-            
+
             if entry.is_fresh:
                 logger.debug(f"Cache hit (fresh): {key}")
                 return entry.value
@@ -109,27 +113,26 @@ class InProcessCache:
                 self._remove_key(key)
                 return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None, swr: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl: Optional[int] = None, swr: Optional[int] = None
+    ) -> None:
         """Set value in cache"""
         if ttl is None:
             ttl = self.default_ttl
         if swr is None:
             swr = self.default_swr
-        
+
         entry = CacheEntry(
-            value=value,
-            created_at=time.time(),
-            ttl_seconds=ttl,
-            swr_seconds=swr
+            value=value, created_at=time.time(), ttl_seconds=ttl, swr_seconds=swr
         )
-        
+
         with self._lock:
             self._evict_expired()
             self._evict_lru()
-            
+
             self._cache[key] = entry
             self._update_access_order(key)
-            
+
         logger.debug(f"Cache set: {key} (TTL: {ttl}s, SWR: {swr}s)")
 
     async def get_or_set(
@@ -137,7 +140,7 @@ class InProcessCache:
         key: str,
         factory: Callable[[], Any],
         ttl: Optional[int] = None,
-        swr: Optional[int] = None
+        swr: Optional[int] = None,
     ) -> Any:
         """
         Get value from cache or compute it using factory and cache it.
@@ -198,7 +201,7 @@ class InProcessCache:
         key: str,
         factory: Callable[[], Any],
         ttl: Optional[int],
-        swr: Optional[int]
+        swr: Optional[int],
     ) -> Any:
         """Fetch value and cache it"""
         # Check for single-flight
@@ -209,7 +212,7 @@ class InProcessCache:
             except Exception as e:
                 logger.warning(f"Shared task failed for {key}: {e}")
                 # Fall through to retry
-        
+
         # Start new task
         logger.debug(f"Fetching new value: {key}")
 
@@ -248,7 +251,7 @@ class InProcessCache:
         key: str,
         factory: Callable[[], Any],
         ttl: Optional[int],
-        swr: Optional[int]
+        swr: Optional[int],
     ) -> None:
         """Background refresh task"""
         try:
@@ -258,7 +261,7 @@ class InProcessCache:
                 value = await factory()
             else:
                 value = factory()
-            
+
             await self.set(key, value, ttl, swr)
             logger.debug(f"Background refresh completed: {key}")
         except Exception as e:
@@ -325,9 +328,19 @@ class InProcessCache:
         with self._lock:
             total_entries = len(self._cache)
             now = time.time()
-            fresh_entries = sum(1 for entry in self._cache.values() if not (now - entry.created_at >= entry.ttl_seconds))
-            stale_entries = sum(1 for entry in self._cache.values() if entry.ttl_seconds <= (now - entry.created_at) < (entry.ttl_seconds + entry.swr_seconds))
-            
+            fresh_entries = sum(
+                1
+                for entry in self._cache.values()
+                if not (now - entry.created_at >= entry.ttl_seconds)
+            )
+            stale_entries = sum(
+                1
+                for entry in self._cache.values()
+                if entry.ttl_seconds
+                <= (now - entry.created_at)
+                < (entry.ttl_seconds + entry.swr_seconds)
+            )
+
             return {
                 "total_entries": total_entries,
                 "fresh_entries": fresh_entries,

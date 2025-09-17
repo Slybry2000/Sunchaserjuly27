@@ -1,10 +1,10 @@
-import os
 import asyncio
 import logging
-from typing import List, Tuple, Optional, Sequence, Any, cast
+import os
+from typing import Any, List, Optional, Sequence, Tuple, cast
 
+from Backend.models.errors import SchemaError, TimeoutBudgetExceeded, UpstreamError
 from Backend.services.weather import get_weather_cached
-from Backend.models.errors import TimeoutBudgetExceeded, SchemaError, UpstreamError
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,9 @@ FANOUT = int(os.getenv("WEATHER_FANOUT_CONCURRENCY", "8"))
 BUDGET = float(os.getenv("REQUEST_BUDGET_MS", "1500")) / 1000.0
 
 
-def first_sunny_block(slots: Sequence[Any], day_start=DAY_S, day_end=DAY_E, cloud_threshold=CLOUD) -> Tuple[Optional[str], int]:
+def first_sunny_block(
+    slots: Sequence[Any], day_start=DAY_S, day_end=DAY_E, cloud_threshold=CLOUD
+) -> Tuple[Optional[str], int]:
     start_iso: Optional[str] = None
     run = 0
     for s in slots:
@@ -32,17 +34,27 @@ def first_sunny_block(slots: Sequence[Any], day_start=DAY_S, day_end=DAY_E, clou
     return start_iso, run
 
 
-def score_candidate(distance_mi: float, duration_hours: int, sun_start_iso: Optional[str]) -> float:
+def score_candidate(
+    distance_mi: float, duration_hours: int, sun_start_iso: Optional[str]
+) -> float:
     base = duration_hours * DUR_W - distance_mi * DIST_W
     return round(max(0.0, base), 3)
 
 
-async def rank(origin_lat, origin_lon, candidates: List[dict], *, max_weather=20, concurrency=FANOUT, budget_s=BUDGET, weather_fetch=get_weather_cached):
+async def rank(
+    origin_lat,
+    origin_lon,
+    candidates: List[dict],
+    *,
+    max_weather=20,
+    concurrency=FANOUT,
+    budget_s=BUDGET,
+    weather_fetch=get_weather_cached,
+):
     """Score and rank candidate locations concurrently.
 
-    Uses asyncio.gather(return_exceptions=True) so that all candidate coroutines are awaited and
-    exceptions are observed. Critical exceptions (TimeoutBudgetExceeded, SchemaError) are re-raised
-    so callers/tests can respond accordingly; other candidate errors are logged and skipped.
+    Uses asyncio.gather(return_exceptions=True); critical exceptions are re-raised,
+    other candidate errors are logged and skipped.
     """
     sem = asyncio.Semaphore(concurrency)
 
@@ -77,7 +89,9 @@ async def rank(origin_lat, origin_lon, candidates: List[dict], *, max_weather=20
         except asyncio.TimeoutError:
             # cancel the gather to ensure tasks are not left running
             gather_task.cancel()
-            raise TimeoutBudgetExceeded(f"Weather ranking timed out after {budget_s} seconds")
+            raise TimeoutBudgetExceeded(
+                f"Weather ranking timed out after {budget_s} seconds"
+            )
 
         processed = []
         for r in results:
@@ -108,7 +122,7 @@ async def rank(origin_lat, origin_lon, candidates: List[dict], *, max_weather=20
 async def score_location(loc, weather: Any):
     """Score a single Location given raw weather dict (compat test helper).
 
-    Returns an object with .score and .best_window attributes for compatibility with tests.
+    Returns an object with .score and .best_window for test compatibility.
     """
     # parse weather into slots if needed
     slots: Sequence[Any]
@@ -125,7 +139,13 @@ async def score_location(loc, weather: Any):
             temps = weather.get("hourly", {}).get("temperature_2m", [])
             slots = []
             for i in range(min(len(times), 48)):
-                slots.append({"ts_local": times[i], "cloud_pct": int(clouds[i]) if i < len(clouds) else 100, "temp_f": float(temps[i]) if i < len(temps) else 0.0})
+                slots.append(
+                    {
+                        "ts_local": times[i],
+                        "cloud_pct": int(clouds[i]) if i < len(clouds) else 100,
+                        "temp_f": float(temps[i]) if i < len(temps) else 0.0,
+                    }
+                )
     else:
         # `weather` may already be a list/sequence of slot dicts; cast for typing
         slots = cast(Sequence[Any], weather)

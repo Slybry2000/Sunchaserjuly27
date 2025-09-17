@@ -1,11 +1,15 @@
-from fastapi.testclient import TestClient
-from main import app
 from datetime import datetime
+
+from fastapi.testclient import TestClient
+
+from main import app
 
 client = TestClient(app)
 
+
 def test_if_none_match_returns_304(monkeypatch):
     url = "/recommend?lat=47.6&lon=-122.3"
+
     # Patch weather to avoid real HTTP calls and make scoring deterministic
     async def fake_get_weather_cached(lat, lon):
         slots = [{"ts_local": "2025-08-14T09:00", "cloud_pct": 10, "temp_f": 68.0}]
@@ -17,6 +21,7 @@ def test_if_none_match_returns_304(monkeypatch):
 
     # Freeze the generated_at timestamp used by RecommendResponse so the ETag is stable
     fixed_dt = datetime(2025, 8, 14, 12, 0, 0)
+
     class FakeDatetime:
         @staticmethod
         def utcnow():

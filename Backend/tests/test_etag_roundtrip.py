@@ -1,11 +1,16 @@
 import json
+
 from Backend.utils.etag import strong_etag_for_obj
 
 
 def _without_generated_at_or_recommendations(payload: dict) -> dict:
     # Router computes ETag before adding the 'recommendations' alias, so
     # remove both keys to simulate the same canonical input.
-    return {k: v for k, v in payload.items() if k not in ("generated_at", "recommendations")}
+    return {
+        k: v
+        for k, v in payload.items()
+        if k not in ("generated_at", "recommendations")
+    }
 
 
 def test_etag_stable_across_router_roundtrip():
@@ -15,16 +20,25 @@ def test_etag_stable_across_router_roundtrip():
         "version": "v1",
     }
 
-    # ETag computed directly from the Python object (canonicalized)
-    etag_direct = strong_etag_for_obj(_without_generated_at_or_recommendations(payload))
+    # ETag computed directly from the canonicalized Python object
+    etag_direct = strong_etag_for_obj(
+        _without_generated_at_or_recommendations(payload)
+    )
 
-    # Simulate router serialization behavior (recommend uses json.dumps(..., default=str, separators=(",",":"), sort_keys=True))
+    # Simulate router serialization behavior (json.dumps with sort_keys=True)
     payload_out = dict(payload)
     payload_out["recommendations"] = payload_out.get("results")
-    serialized = json.dumps(payload_out, default=str, separators=(",", ":"), sort_keys=True)
+    serialized = json.dumps(
+        payload_out,
+        default=str,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
     loaded = json.loads(serialized)
 
     # Compute ETag on the loaded payload (remove generated_at if present)
-    etag_after_roundtrip = strong_etag_for_obj(_without_generated_at_or_recommendations(loaded))
+    etag_after_roundtrip = strong_etag_for_obj(
+        _without_generated_at_or_recommendations(loaded)
+    )
 
     assert etag_direct == etag_after_roundtrip

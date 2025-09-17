@@ -5,6 +5,7 @@ class SunshineSpot {
   final double latitude;
   final double longitude;
   final String imageUrl;
+  final String? apiPhotoId; // Unsplash API photo id for meta/track
   final int sunshineHours;
   final double temperature;
   final String weather;
@@ -20,6 +21,7 @@ class SunshineSpot {
     required this.latitude,
     required this.longitude,
     required this.imageUrl,
+  this.apiPhotoId,
     required this.sunshineHours,
     required this.temperature,
     required this.weather,
@@ -36,6 +38,7 @@ class SunshineSpot {
     double? latitude,
     double? longitude,
     String? imageUrl,
+  String? apiPhotoId,
     int? sunshineHours,
     double? temperature,
     String? weather,
@@ -50,6 +53,7 @@ class SunshineSpot {
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     imageUrl: imageUrl ?? this.imageUrl,
+  apiPhotoId: apiPhotoId ?? this.apiPhotoId,
     sunshineHours: sunshineHours ?? this.sunshineHours,
     temperature: temperature ?? this.temperature,
     weather: weather ?? this.weather,
@@ -66,6 +70,7 @@ class SunshineSpot {
     'latitude': latitude,
     'longitude': longitude,
     'imageUrl': imageUrl,
+  'apiPhotoId': apiPhotoId,
     'sunshineHours': sunshineHours,
     'temperature': temperature,
     'weather': weather,
@@ -82,6 +87,7 @@ class SunshineSpot {
     latitude: json['latitude'],
     longitude: json['longitude'],
     imageUrl: json['imageUrl'],
+  apiPhotoId: json['apiPhotoId'],
     sunshineHours: json['sunshineHours'],
     temperature: json['temperature'],
     weather: json['weather'],

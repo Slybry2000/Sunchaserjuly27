@@ -5,6 +5,7 @@ import 'package:sunshine_spotter/models/sunshine_spot.dart';
 import 'package:sunshine_spotter/services/api_client.dart';
 import 'package:sunshine_spotter/services/telemetry_service.dart';
 import 'package:sunshine_spotter/services/location_image_service.dart';
+import 'package:sunshine_spotter/config.dart';
 
 class DataService {
   static const String _favoritesKey = 'favorites';
@@ -12,9 +13,12 @@ class DataService {
   // API base URL can be provided at build/run time via --dart-define=API_BASE_URL
   // Default uses Android emulator host mapping for local dev.
   static final ApiClient _apiClient = ApiClient(
-    baseUrl: const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000'),
+    // Use helper so local web dev defaults to localhost.
+    baseUrl: apiBaseUrl(),
   );
 
+  // Sample spots now use category fallback Unsplash images instead of
+  // brittle direct Pixabay image URLs returning 400 in web contexts.
   static final List<SunshineSpot> _sampleSpots = [
     SunshineSpot(
       id: '1',
@@ -22,7 +26,7 @@ class DataService {
       description: 'Beautiful beachfront park with golden sand and crystal clear waters. Perfect for sunbathing and beach volleyball.',
       latitude: 37.7749,
       longitude: -122.4194,
-      imageUrl: 'https://pixabay.com/get/g6743ee2e7625dd0be8d5ee02211e7c0e828923c8cedba49b3b04d833e6b46b84cebba0ac83810df7590f675baa6978d28578dc4f04cf050dc07b2a63836ccd39_1280.jpg',
+  imageUrl: LocationImageService.getCategoryImageUrl('beach')['url'] ?? '',
       sunshineHours: 8,
       temperature: 78.5,
       weather: 'Sunny',
@@ -36,7 +40,7 @@ class DataService {
       description: 'Stunning mountain overlook with panoramic views and excellent hiking trails. Breathtaking sunrise and sunset views.',
       latitude: 37.8044,
       longitude: -122.2712,
-      imageUrl: 'https://pixabay.com/get/gce157442f9d085ed1712dd6bca1b35d1cabbac38cfa254f789f5879fb216a978a34f17807ccdf7183a3cb7cd2555040d07b6f900e580bed49f832db3db218e13_1280.jpg',
+  imageUrl: LocationImageService.getCategoryImageUrl('mountain')['url'] ?? '',
       sunshineHours: 7,
       temperature: 72.0,
       weather: 'Partly Cloudy',
@@ -50,7 +54,7 @@ class DataService {
       description: 'Peaceful riverside park with walking paths, picnic areas, and beautiful flower gardens.',
       latitude: 37.7849,
       longitude: -122.4094,
-      imageUrl: 'https://pixabay.com/get/g09f73fa251cb440a0cbae8a5b7d15c97e39c5c9563482bbf33e31b792b3566fefa34714e9d48bdd74507a64b816f76bc229f330a23f8bf4b3176d026f49c05a2_1280.jpg',
+  imageUrl: LocationImageService.getCategoryImageUrl('park')['url'] ?? '',
       sunshineHours: 6,
       temperature: 75.2,
       weather: 'Sunny',
@@ -64,7 +68,7 @@ class DataService {
       description: 'Open meadow filled with seasonal wildflowers and perfect for photography and relaxation.',
       latitude: 37.7649,
       longitude: -122.4394,
-      imageUrl: 'https://pixabay.com/get/g2a29112cb3c0a000302179b8c458027469ed3949d4a9b73b95b9067741e1dc0b0da556652875679d4ff493fef4f07c3eb203fbd057910bedc434ac74a11093c6_1280.jpg',
+  imageUrl: LocationImageService.getCategoryImageUrl('valley')['url'] ?? '',
       sunshineHours: 9,
       temperature: 80.1,
       weather: 'Clear',
@@ -78,7 +82,7 @@ class DataService {
       description: 'Historic lighthouse with coastal views and dramatic cliff formations.',
       latitude: 37.8149,
       longitude: -122.4794,
-      imageUrl: 'https://pixabay.com/get/g6743ee2e7625dd0be8d5ee02211e7c0e828923c8cedba49b3b04d833e6b46b84cebba0ac83810df7590f675baa6978d28578dc4f04cf050dc07b2a63836ccd39_1280.jpg',
+  imageUrl: LocationImageService.getCategoryImageUrl('beach')['url'] ?? '',
       sunshineHours: 7,
       temperature: 74.8,
       weather: 'Sunny',
@@ -101,21 +105,56 @@ class DataService {
     try {
   final resp = await _apiClient.recommend(latitude, longitude, radius: radiusMiles.toInt(), q: q);
       if (resp != null) {
-        // Map RecommendResponse -> SunshineSpot
+        // Map RecommendResponse -> SunshineSpot, ensuring per-category unique images
+        final Map<String, Set<String>> usedUrlsByCategory = {};
         List<SunshineSpot> spots = resp.results.map((r) {
           final distance = _calculateDistance(latitude, longitude, r.lat, r.lon);
+          final category = r.category;
+          final pool = LocationImageService.getCategoryImagePool(category);
+          // Choose an image URL:
+          // - If backend provided photoId and it matches a pool apiId, use that pool URL.
+          // - Else use deterministic category URL seeded by location id.
+          String imageUrl;
+          final pid = (r.photoId ?? '').trim();
+          if (pid.isNotEmpty) {
+            final match = pool.firstWhere(
+              (e) => (e['apiId'] ?? '') == pid,
+              orElse: () => const <String, String>{},
+            );
+            imageUrl = (match['url'] ?? '')
+                .toString()
+                .isNotEmpty
+                ? match['url']!
+                : LocationImageService.getCategoryImageUrl(category, seed: r.id)['url']!;
+          } else {
+            imageUrl = LocationImageService.getCategoryImageUrl(category, seed: r.id)['url']!;
+          }
+
+          // Enforce uniqueness per category within this response when possible
+          final used = usedUrlsByCategory.putIfAbsent(category.toLowerCase(), () => <String>{});
+          if (used.contains(imageUrl)) {
+            // Try to find an alternative in the pool
+            final alt = pool.firstWhere(
+              (e) => !used.contains(e['url'] ?? ''),
+              orElse: () => <String, String>{'url': imageUrl},
+            );
+            imageUrl = alt['url'] ?? imageUrl;
+          }
+          used.add(imageUrl);
+
           return SunshineSpot(
             id: r.id,
             name: r.name,
             description: _buildDescription(r),
             latitude: r.lat,
             longitude: r.lon,
-            imageUrl: LocationImageService.getLocationImageUrl(r.id, r.category),
+            imageUrl: imageUrl,
+            apiPhotoId: (r.photoId ?? '').isNotEmpty ? r.photoId : null,
             sunshineHours: r.durationHours,
             temperature: 70.0, // Could be enhanced with weather API temperature
             weather: 'Sunny',
             rating: (r.score / 100.0 * 5.0), // Convert 0-100 score to 0-5 rating
-            category: r.category, // Use backend category
+            category: category, // Use backend category
             distance: distance,
           );
         }).where((s) => s.distance <= radiusMiles).toList();
@@ -158,7 +197,7 @@ class DataService {
     }
 
     // This fallback code is now unreachable - keeping for reference but should be removed
-    // TODO: Remove this entire fallback section in next cleanup
+  // TODO-3: Remove this entire fallback section in next cleanup (see docs/INLINE_TODO_ISSUES.md)
     await Future.delayed(const Duration(milliseconds: 800));
     final Random random = Random();
     

@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const HomePage(), // TODO(agent): please implement.
+  home: const HomePage(), // TODO-4: Implement HomePage wiring (see docs/INLINE_TODO_ISSUES.md)
     );
   }
 }

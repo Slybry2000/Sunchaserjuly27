@@ -6,9 +6,7 @@ This script tries multiple methods to find the active staging environment.
 
 import subprocess
 import requests
-import json
 import sys
-import time
 from typing import Optional
 
 def run_command(cmd: str) -> Optional[str]:
@@ -33,7 +31,7 @@ def test_url(url: str) -> bool:
         if response.status_code == 200:
             data = response.json()
             if data.get('status') == 'ok':
-                print(f"✅ Health check passed")
+                print("✅ Health check passed")
                 return True
         print(f"❌ Health check failed: {response.status_code}")
         return False
@@ -117,5 +115,5 @@ if __name__ == "__main__":
         print(f"\n🎉 Success! Staging is live at: {staging_url}")
         sys.exit(0)
     else:
-        print(f"\n⚠️  Staging URL needs manual discovery")
+        print("\n⚠️  Staging URL needs manual discovery")
         sys.exit(1)

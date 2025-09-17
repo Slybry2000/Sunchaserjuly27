@@ -1,14 +1,15 @@
-
-import os
-import json
 import asyncio
+import json
 import logging
-from typing import Any, Dict, List, Optional
-import httpx
+import os
 import random
+from typing import Any, Dict, List, Optional
+
+import httpx
+
 from Backend.services.metrics import incr
 
-logger = logging.getLogger('sunshine_backend.telemetry.sink')
+logger = logging.getLogger("sunshine_backend.telemetry.sink")
 
 
 async def sink_event_jsonl(payload: Dict[str, Any]) -> None:
@@ -16,7 +17,7 @@ async def sink_event_jsonl(payload: Dict[str, Any]) -> None:
 
     This uses asyncio.to_thread to avoid blocking the event loop during file I/O.
     """
-    path = os.getenv('TELEMETRY_SINK_PATH', '').strip()
+    path = os.getenv("TELEMETRY_SINK_PATH", "").strip()
     if not path:
         return
 
@@ -28,10 +29,10 @@ async def sink_event_jsonl(payload: Dict[str, Any]) -> None:
             dirpath = os.path.dirname(path)
             if dirpath and not os.path.exists(dirpath):
                 os.makedirs(dirpath, exist_ok=True)
-            with open(path, 'a', encoding='utf-8') as f:
-                f.write(line + '\n')
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
         except Exception:
-            logger.exception('Failed to write telemetry to %s', path)
+            logger.exception("Failed to write telemetry to %s", path)
 
     await asyncio.to_thread(_write)
 
@@ -41,40 +42,47 @@ async def sink_event_forward_http(payload: Dict[str, Any]) -> None:
 
     This is fire-and-forget and times out quickly to avoid blocking pipeline.
     """
-    url = os.getenv('TELEMETRY_SINK_URL', '').strip()
+    url = os.getenv("TELEMETRY_SINK_URL", "").strip()
     if not url:
         return
 
     # Retry/backoff configuration
     try:
-        max_retries = int(os.getenv('TELEMETRY_FORWARD_RETRIES', '3'))
+        max_retries = int(os.getenv("TELEMETRY_FORWARD_RETRIES", "3"))
     except Exception:
         max_retries = 3
     try:
-        base_delay = float(os.getenv('TELEMETRY_FORWARD_BASE_DELAY_SEC', '0.5'))
+        base_delay = float(os.getenv("TELEMETRY_FORWARD_BASE_DELAY_SEC", "0.5"))
     except Exception:
         base_delay = 0.5
     try:
-        max_delay = float(os.getenv('TELEMETRY_FORWARD_MAX_DELAY_SEC', '5.0'))
+        max_delay = float(os.getenv("TELEMETRY_FORWARD_MAX_DELAY_SEC", "5.0"))
     except Exception:
         max_delay = 5.0
 
     attempt = 0
     while attempt < max_retries:
         attempt += 1
-        incr('telemetry_forward_attempts')
+        incr("telemetry_forward_attempts")
         try:
             async with httpx.AsyncClient(timeout=2.0) as client:
                 await client.post(url, json=payload)
-            incr('telemetry_forward_success')
+            incr("telemetry_forward_success")
             return
         except Exception:
-            incr('telemetry_forward_failures')
-            logger.warning('Telemetry forward attempt %d/%d failed to %s', attempt, max_retries, url)
-            logger.info('payload=%s', payload)
+            incr("telemetry_forward_failures")
+            logger.warning(
+                "Telemetry forward attempt %d/%d failed",
+                attempt,
+                max_retries,
+            )
+            logger.warning("target url=%s", url)
+            logger.info("payload=%s", payload)
             if attempt >= max_retries:
-                incr('telemetry_forward_final_failures')
-                logger.exception('Failed to forward telemetry to %s after %d attempts', url, attempt)
+                incr("telemetry_forward_final_failures")
+                logger.exception(
+                    "Failed to forward telemetry to %s after %d attempts", url, attempt
+                )
                 return
             # exponential backoff with jitter
             delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
@@ -120,7 +128,9 @@ class TelemetryBatcher:
             items: List[Dict[str, Any]] = []
             try:
                 # wait for the first item with timeout
-                first = await asyncio.wait_for(self.queue.get(), timeout=self.interval_sec)
+                first = await asyncio.wait_for(
+                    self.queue.get(), timeout=self.interval_sec
+                )
                 # sentinel used to wake up on stop
                 if first is None:
                     break
@@ -157,19 +167,19 @@ class TelemetryBatcher:
 
     async def _flush(self, items: List[Dict[str, Any]]) -> None:
         # Write JSONL for each item in a thread to avoid blocking
-        path = os.getenv('TELEMETRY_SINK_PATH', '').strip()
+        path = os.getenv("TELEMETRY_SINK_PATH", "").strip()
         if path:
-            lines = [json.dumps(p, ensure_ascii=False) + '\n' for p in items]
+            lines = [json.dumps(p, ensure_ascii=False) + "\n" for p in items]
 
             def _write_lines():
                 try:
                     dirpath = os.path.dirname(path)
                     if dirpath and not os.path.exists(dirpath):
                         os.makedirs(dirpath, exist_ok=True)
-                    with open(path, 'a', encoding='utf-8') as f:
+                    with open(path, "a", encoding="utf-8") as f:
                         f.writelines(lines)
                 except Exception:
-                    logger.exception('Failed to write telemetry batch to %s', path)
+                    logger.exception("Failed to write telemetry batch to %s", path)
 
             await asyncio.to_thread(_write_lines)
 
@@ -178,7 +188,7 @@ class TelemetryBatcher:
             try:
                 asyncio.create_task(sink_event_forward_http(payload))
             except Exception:
-                logger.exception('Failed to schedule forward for telemetry payload')
+                logger.exception("Failed to schedule forward for telemetry payload")
 
 
 # Global batcher instance managed by start/stop helpers
@@ -190,11 +200,11 @@ async def start_telemetry_batcher() -> None:
     if _BATCHER is not None:
         return
     try:
-        batch_size = int(os.getenv('TELEMETRY_BATCH_SIZE', '25'))
+        batch_size = int(os.getenv("TELEMETRY_BATCH_SIZE", "25"))
     except Exception:
         batch_size = 25
     try:
-        interval = float(os.getenv('TELEMETRY_BATCH_INTERVAL_SEC', '2.0'))
+        interval = float(os.getenv("TELEMETRY_BATCH_INTERVAL_SEC", "2.0"))
     except Exception:
         interval = 2.0
     _BATCHER = TelemetryBatcher(batch_size=batch_size, interval_sec=interval)
@@ -210,7 +220,7 @@ async def stop_telemetry_batcher() -> None:
 
 
 async def enqueue_event(payload: Dict[str, Any]) -> None:
-    """Enqueue an event for batching if the batcher is running; otherwise write immediately."""
+    """Enqueue an event for batching, or write immediately if not running."""
     if _BATCHER is not None:
         await _BATCHER.enqueue(payload)
         return
@@ -221,5 +231,4 @@ async def enqueue_event(payload: Dict[str, Any]) -> None:
     try:
         asyncio.create_task(sink_event_forward_http(payload))
     except Exception:
-        logger.exception('Failed to schedule forward for telemetry payload')
-
+        logger.exception("Failed to schedule forward for telemetry payload")

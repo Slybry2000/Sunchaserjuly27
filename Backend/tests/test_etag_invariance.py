@@ -1,5 +1,7 @@
 from decimal import Decimal
+
 from freezegun import freeze_time
+
 from Backend.utils.etag import strong_etag_for_obj
 
 
@@ -38,7 +40,9 @@ def test_etag_invariant_to_key_order_and_float_representation():
     # payload B: same logical content, different key order and Decimal for float
     payload_b = {
         "version": "v1",
-        "results": [{"distance_mi": Decimal("10.1"), "score": Decimal("12.34"), "id": "PNW_001"}],
+        "results": [
+            {"distance_mi": Decimal("10.1"), "score": Decimal("12.34"), "id": "PNW_001"}
+        ],
         "query": {"radius": 100, "lon": -122.3, "lat": 47.6},
     }
 

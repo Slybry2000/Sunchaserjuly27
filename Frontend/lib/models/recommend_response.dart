@@ -11,6 +11,7 @@ class RecommendationResult {
   final String? sunStartIso;
   final int durationHours;
   final double score;
+  final String? photoId;
 
   RecommendationResult({
     required this.id,
@@ -24,15 +25,17 @@ class RecommendationResult {
     required this.distanceMi,
     required this.sunStartIso,
     required this.durationHours,
-    required this.score,
+  required this.score,
+  this.photoId,
   });
 
   factory RecommendationResult.fromJson(Map<String, dynamic> json) => RecommendationResult(
         id: json['id'] as String,
         name: json['name'] as String,
-        lat: (json['lat'] as num).toDouble(),
-        lon: (json['lon'] as num).toDouble(),
-        elevation: (json['elevation'] as num).toDouble(),
+  // TODO-6: Review numeric casts for null-safety and parse errors (see docs/INLINE_TODO_ISSUES.md)
+  lat: (json['lat'] as num).toDouble(),
+  lon: (json['lon'] as num).toDouble(),
+  elevation: (json['elevation'] as num).toDouble(),
         category: json['category'] as String,
         state: json['state'] as String,
         timezone: json['timezone'] as String,
@@ -40,6 +43,7 @@ class RecommendationResult {
         sunStartIso: json['sun_start_iso'] as String?,
         durationHours: (json['duration_hours'] as num).toInt(),
         score: (json['score'] as num).toDouble(),
+        photoId: json['photo_id'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -55,6 +59,7 @@ class RecommendationResult {
         'sun_start_iso': sunStartIso,
         'duration_hours': durationHours,
         'score': score,
+  'photo_id': photoId,
       };
 }
 

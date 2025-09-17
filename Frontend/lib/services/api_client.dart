@@ -10,8 +10,13 @@ class ApiClient {
 
   ApiClient({required this.baseUrl, http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
 
-  String _canonicalKey(double lat, double lon, int radius) => 'recommend:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
-  String _canonicalKeyForQuery(String q, int radius) => 'recommend:q:${q.trim().toLowerCase()}:$radius';
+  static const String _ver = 'v2';
+  // New (versioned) cache key format
+  String _canonicalKey(double lat, double lon, int radius) => 'recommend:${_ver}:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
+  String _canonicalKeyForQuery(String q, int radius) => 'recommend:${_ver}:q:${q.trim().toLowerCase()}:$radius';
+  // Legacy (unversioned) key format still used by older tests / installations
+  String _legacyKey(double lat, double lon, int radius) => 'recommend:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
+  String _legacyKeyForQuery(String q, int radius) => 'recommend:q:${q.trim().toLowerCase()}:$radius';
 
   Future<RecommendResponse?> recommend(double lat, double lon, {int radius = 100, String? q}) async {
     final stopwatch = Stopwatch()..start();
@@ -34,8 +39,19 @@ class ApiClient {
         });
       }
 
-      final storedEtag = prefs.getString('$key:etag');
-      final storedBody = prefs.getString('$key:body');
+      // Attempt primary (versioned) lookup first
+      String? storedEtag = prefs.getString('$key:etag');
+      String? storedBody = prefs.getString('$key:body');
+
+      // Back-compat: if not found, fall back to legacy key naming so existing
+      // tests (which pre-populate legacy keys) still work while we migrate.
+      if (storedEtag == null || storedBody == null) {
+        final legacyKey = (q != null && q.trim().isNotEmpty)
+            ? _legacyKeyForQuery(q, radius)
+            : _legacyKey(lat, lon, radius);
+        storedEtag ??= prefs.getString('$legacyKey:etag');
+        storedBody ??= prefs.getString('$legacyKey:body');
+      }
       final headers = <String, String>{'Accept': 'application/json'};
       if (storedEtag != null) {
         headers['If-None-Match'] = storedEtag;
@@ -49,8 +65,14 @@ class ApiClient {
         final etag = resp.headers['etag'];
         final body = resp.body;
         if (etag != null) {
+          // Store under both new and legacy keys for transition period.
           await prefs.setString('$key:etag', etag);
           await prefs.setString('$key:body', body);
+          final legacyKey = (q != null && q.trim().isNotEmpty)
+              ? _legacyKeyForQuery(q, radius)
+              : _legacyKey(lat, lon, radius);
+            await prefs.setString('$legacyKey:etag', etag);
+            await prefs.setString('$legacyKey:body', body);
           TelemetryService.logCacheEvent('store', key);
         }
         final json = jsonDecode(body) as Map<String, dynamic>;

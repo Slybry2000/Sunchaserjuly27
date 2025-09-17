@@ -4,3 +4,5 @@ httpx
 pydantic>=2
 tenacity
 prometheus-client
+requests
+redis

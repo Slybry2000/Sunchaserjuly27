@@ -1,5 +1,6 @@
-import os
 import importlib
+import os
+
 import pytest
 
 # Explicitly import pytest_asyncio to guarantee the plugin is registered
@@ -29,6 +30,7 @@ def enable_sync_cache_refresh():
     # SYNC_REFRESH reads the updated env var.
     try:
         import Backend.utils.cache_inproc as _cache_inproc
+
         importlib.reload(_cache_inproc)
     except Exception:
         # best-effort: tests that import the module later will pick up the env var

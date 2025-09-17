@@ -13,7 +13,8 @@ payload = {
 etag_direct = strong_etag_for_obj(_without_generated_at(payload))
 
 payload_out = dict(payload)
-payload_out["recommendations"] = payload_out.get("results")
+# payload_out.get("results") may be None in some cases; this is a small debug script.
+payload_out["recommendations"] = payload_out.get("results")  # type: ignore
 serialized = json.dumps(payload_out, default=str, separators=(",", ":"), sort_keys=True)
 loaded = json.loads(serialized)
 

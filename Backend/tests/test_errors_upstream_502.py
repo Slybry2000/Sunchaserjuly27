@@ -1,14 +1,12 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from fastapi.testclient import TestClient  # type: ignore
-from main import app
+
 from Backend.models.errors import UpstreamError
+from Backend.main import app
 
 
 def _raise_upstream():
     raise UpstreamError("Open-Meteo unavailable")
+
 
 # Add a test-only route to trigger the handler once
 if not any(getattr(r, "path", "") == "/__raise_upstream" for r in app.router.routes):

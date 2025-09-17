@@ -1,9 +1,12 @@
 from fastapi.testclient import TestClient
-from main import app
+
 import Backend.routers.recommend as recommend_module
+from main import app
+
 
 def test_recommend_happy(monkeypatch):
     client = TestClient(app)
+
     # Patch weather and scoring to avoid real HTTP
     async def _fake_rank(*args, **kwargs):
         return []
@@ -15,6 +18,7 @@ def test_recommend_happy(monkeypatch):
     if response.status_code == 200:
         assert "ETag" in response.headers
         assert "recommendations" in response.json()
+
 
 def test_recommend_missing_param():
     client = TestClient(app)

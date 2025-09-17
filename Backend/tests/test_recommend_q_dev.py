@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 
@@ -16,6 +15,7 @@ async def test_recommend_q_dev_bypass_returns_demo_rows(monkeypatch):
 
     # Import app after env mutated
     from Backend.main import app
+
     # Use ASGI transport where available to run the app in-process.
     try:
         from httpx import ASGITransport

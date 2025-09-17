@@ -6,11 +6,12 @@ _counters: Dict[str, int] = {}
 
 # Optional Prometheus integration (used if prometheus_client is installed)
 prometheus_available = False
-CONTENT_TYPE_LATEST = 'text/plain; version=0.0.4; charset=utf-8'
+CONTENT_TYPE_LATEST = "text/plain; version=0.0.4; charset=utf-8"
 _prom_generate_latest = None
 _prom_counters = {}
 try:
-    from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST as _CT
+    from prometheus_client import CONTENT_TYPE_LATEST as _CT
+    from prometheus_client import Counter, generate_latest
 
     prometheus_available = True
     CONTENT_TYPE_LATEST = _CT
@@ -18,8 +19,8 @@ try:
     def _get_prom_counter(name: str):
         if name not in _prom_counters:
             # use a simple name sanitization: replace invalid chars with _
-            cname = name.replace('.', '_').replace('-', '_')
-            _prom_counters[name] = Counter(cname, f'Counter for {name}')
+            cname = name.replace(".", "_").replace("-", "_")
+            _prom_counters[name] = Counter(cname, f"Counter for {name}")
         return _prom_counters[name]
 
     _prom_generate_latest = generate_latest
@@ -55,5 +56,5 @@ def reset() -> None:
 def prometheus_metrics() -> bytes:
     """Return Prometheus exposition text (bytes). Raises RuntimeError if unavailable."""
     if not prometheus_available or _prom_generate_latest is None:
-        raise RuntimeError('prometheus_client not available')
+        raise RuntimeError("prometheus_client not available")
     return _prom_generate_latest()

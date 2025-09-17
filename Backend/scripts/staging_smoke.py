@@ -7,9 +7,11 @@ Exit code 0 means all core checks passed.
 Usage: python Backend/scripts/staging_smoke.py [--base http://127.0.0.1:8000]
 """
 from __future__ import annotations
-import os
-import json
+
 import argparse
+import json
+import os
+
 import httpx
 
 
@@ -47,8 +49,11 @@ def run_check(base: str) -> int:
         except Exception:
             log(r.text)
         # geocode may 400 if ENABLE_Q disabled; treat 200 as success, else warn
-        if r.status_code != 200:
-            log("/geocode did not return 200; check ENABLE_Q/MAPBOX_TOKEN or DEV_ALLOW_GEOCODE")
+            if r.status_code != 200:
+                log(
+                    "/geocode did not return 200; check ENABLE_Q/MAPBOX_TOKEN or"
+                    " DEV_ALLOW_GEOCODE"
+                )
     except Exception as e:
         log(f"/geocode request failed: {e}")
 
@@ -67,12 +72,19 @@ def run_check(base: str) -> int:
             if etag:
                 log(f"ETag present: {etag}")
                 # revalidate
-                r2 = client.get("/recommend", params={"q": "Seattle, WA", "radius": "25"}, headers={"If-None-Match": etag})
+                r2 = client.get(
+                    "/recommend",
+                    params={"q": "Seattle, WA", "radius": "25"},
+                    headers={"If-None-Match": etag},
+                )
                 log(f"/recommend revalidate -> {r2.status_code}")
                 if r2.status_code == 304:
                     log("Conditional request returned 304 Not Modified")
                 else:
-                    log("Conditional request did not return 304; got body or different ETag")
+                    log(
+                        "Conditional request did not return 304; got body or different"
+                        " ETag"
+                    )
         else:
             ok = False
     except Exception as e:
@@ -84,7 +96,11 @@ def run_check(base: str) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base", default=os.getenv("API_BASE_URL", "http://127.0.0.1:8000"), help="Base URL for API")
+    parser.add_argument(
+        "--base",
+        default=os.getenv("API_BASE_URL", "http://127.0.0.1:8000"),
+        help="Base URL for API",
+    )
     args = parser.parse_args(argv)
 
     log(f"Running staging smoke checks against {args.base}")
