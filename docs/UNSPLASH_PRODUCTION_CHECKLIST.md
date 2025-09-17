@@ -208,7 +208,7 @@ These four small changes will let CI verify the tracked:true branch safely and m
 ### Frontend / release tasks (new)
  - [x] Implement frontend wiring per `docs/UNSPLASH_FRONTEND_EXAMPLE.md` in the Flutter app and capture the 3 required screenshots (implementation: wiring + attribution rendering implemented; screenshots still pending capture)
  - [ ] Add a CI job (or manual job) to verify screenshot generation and attach them to the PR
- - [ ] Security review: confirm no Client-ID or secrets are present in frontend bundles
+ - [x] Security review: confirm no Client-ID or secrets are present in frontend bundles (grep audit clean)
 
 ### Release readiness checklist ✅ READY FOR NEXT PHASE
 - [x] **All tests passing in CI** (16/16 checks green in GitHub Actions)
