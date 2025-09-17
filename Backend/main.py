@@ -30,6 +30,26 @@ from Backend.services.telemetry_sink import (
     stop_telemetry_batcher,
 )
 from Backend.utils.cache import cached
+from datetime import datetime
+import subprocess
+
+
+def _compute_build_info():
+    sha = os.environ.get("GIT_COMMIT_SHA")
+    if not sha:
+        try:
+            sha = (
+                subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])  # nosec B603
+                .decode("utf-8")
+                .strip()
+            )
+        except Exception:
+            sha = "unknown"
+    ts = os.environ.get("BUILD_TIMESTAMP") or datetime.utcnow().isoformat() + "Z"
+    tag = os.environ.get("GIT_TAG", "")
+    return {"commit": sha, "timestamp": ts, "tag": tag}
+
+_BUILD_INFO = _compute_build_info()
 
 
 @asynccontextmanager
@@ -301,6 +321,12 @@ async def metrics_endpoint():
     except Exception:
         # fallback to JSON counters
         return get_metrics()
+
+
+@app.get("/internal/version", tags=["health"], summary="Build/version info")
+async def version_info():
+    """Return build metadata (commit SHA, build timestamp, optional tag)."""
+    return _BUILD_INFO
 
 
 @app.get(

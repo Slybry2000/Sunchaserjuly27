@@ -4,10 +4,10 @@
 ## Pre-Application Requirements
 
 ### ✅ Technical Implementation
-- [ ] **Photo Hotlinking**: All photos must hotlink to original Unsplash URLs
-  - [ ] Use `photo.urls.regular` for display images
-  - [ ] Use `photo.urls.small` for thumbnails
-  - [ ] Never cache or store Unsplash images locally
+- [x] **Photo Hotlinking**: All photos must hotlink to original Unsplash URLs (implemented via backend meta + Flutter services)
+  - [x] Use `photo.urls.regular` for display images
+  - [x] Use `photo.urls.small` for thumbnails
+  - [x] Never cache or store Unsplash images locally
   
  - [x] **Download Tracking**: Trigger download endpoint when users view photos
    - [x] Implement `triggerDownload()` function (backend helper added in `Backend/services/unsplash_integration.py` and unit-tested)
@@ -132,12 +132,12 @@ Widget buildAttribution(UnsplashPhoto photo) {
 ## Pre-Submission Checklist
 
 ### 🧪 Testing Requirements
-- [ ] Test photo hotlinking works correctly
+- [x] Test photo hotlinking works correctly
 - [x] Verify download tracking is called for each photo view
    - [x] Backend unit tests added for the helper (see `Backend/tests/test_unsplash_integration.py`)
    - [x] Integration tests added simulating frontend-visible render triggering backend track call
 - [x] Confirm attribution links work and open correct pages (helper returns correct links; frontend rendering still required)
-- [ ] Test app functionality without Unsplash branding
+- [ ] Test app functionality without Unsplash branding (visual distinction review pending)
 - [ ] Validate photo search returns relevant results
 - [x] Frontend wiring: implement visible-once tracking and render attribution (implementation completed in Flutter app)
 - [x] CI Integration Testing: End-to-end smoke tests in CI pipeline (✅ PASSING)
@@ -219,10 +219,12 @@ These four small changes will let CI verify the tracked:true branch safely and m
 - [ ] **Frontend link tappability** implemented using `url_launcher` (NEXT STEP)
 
 ### 🎯 Next Immediate Steps (Priority Order)
-1. **Screenshot Capture** - Take required Unsplash application screenshots
-2. **Link Tappability** - Implement `url_launcher` for attribution links  
+1. **Link Tappability** - Implement `url_launcher` for attribution links  
+2. **Screenshot Capture** - Take required Unsplash application screenshots
 3. **Application Submission** - Submit to Unsplash Developer Portal
 4. **Production Deployment** - After approval, deploy with production keys
+5. **Visual Distinction Review** - Formal UX pass
+6. **Add /internal/version to docs** - (Implemented in backend for traceability)
 
 ### 🛠 Local Development CORS Troubleshooting (New)
 If you see errors like:

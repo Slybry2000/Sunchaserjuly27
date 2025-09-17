@@ -6,7 +6,7 @@ This file centralizes outstanding work discovered across the repository (docs, b
 
 ## High-level status
 
-- Current branch: `feature/unsplash-tracking`
+- Current branch: `master`
 - Backend: endpoints and helpers implemented and unit-tested (`/internal/photos/meta`, `/internal/photos/track`, `Backend/services/unsplash_integration.py`) — see `Backend/tests/*` for unit/integration tests.
 - CI: integration smoke test and other checks are present in CI (CI reported 16/16 passing for the feature branch).
 - Frontend: attribution rendering wired, but tappable links and screenshot artifacts are pending.
@@ -177,4 +177,7 @@ If you'd like, I will start with implementing tappable attribution links in the 
 
 ---
 
-Generated on: 2025-09-14
+Generated on: 2025-09-16 (auto-updated)
+
+### Newly completed
+- Added `/internal/version` endpoint exposing commit SHA, timestamp, tag (for smoke diagnostics & rollback traceability).
