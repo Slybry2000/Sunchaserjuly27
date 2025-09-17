@@ -1,0 +1,30 @@
+name: Frontend Screenshots
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Frontend/**'
+      - 'docs/UNSPLASH_PRODUCTION_CHECKLIST.md'
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Flutter pub get
+        run: flutter pub get
+        working-directory: Frontend
+      - name: Run screenshot test
+        run: flutter test test/capture_screenshots_test.dart
+        working-directory: Frontend
+      - name: Upload screenshots artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-screenshots
+          path: Frontend/build/screenshots/*.png
+          if-no-files-found: warn
