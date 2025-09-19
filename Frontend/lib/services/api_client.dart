@@ -12,8 +12,8 @@ class ApiClient {
 
   static const String _ver = 'v2';
   // New (versioned) cache key format
-  String _canonicalKey(double lat, double lon, int radius) => 'recommend:${_ver}:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
-  String _canonicalKeyForQuery(String q, int radius) => 'recommend:${_ver}:q:${q.trim().toLowerCase()}:$radius';
+  String _canonicalKey(double lat, double lon, int radius) => 'recommend:$_ver:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
+  String _canonicalKeyForQuery(String q, int radius) => 'recommend:$_ver:q:${q.trim().toLowerCase()}:$radius';
   // Legacy (unversioned) key format still used by older tests / installations
   String _legacyKey(double lat, double lon, int radius) => 'recommend:${lat.toStringAsFixed(4)}:${lon.toStringAsFixed(4)}:$radius';
   String _legacyKeyForQuery(String q, int radius) => 'recommend:q:${q.trim().toLowerCase()}:$radius';
