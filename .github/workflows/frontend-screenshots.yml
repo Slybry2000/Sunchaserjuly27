@@ -1,7 +1,12 @@
+---
 name: Frontend Screenshots
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'Frontend/**'
   pull_request:
     paths:
       - 'Frontend/**'

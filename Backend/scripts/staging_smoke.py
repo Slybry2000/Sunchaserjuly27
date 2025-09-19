@@ -6,6 +6,7 @@ Exit code 0 means all core checks passed.
 
 Usage: python Backend/scripts/staging_smoke.py [--base http://127.0.0.1:8000]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,7 +49,7 @@ def run_check(base: str) -> int:
             log(pretty(r.json()))
         except Exception:
             log(r.text)
-        # geocode may 400 if ENABLE_Q disabled; treat 200 as success, else warn
+            # geocode may 400 if ENABLE_Q disabled; treat 200 as success, else warn
             if r.status_code != 200:
                 log(
                     "/geocode did not return 200; check ENABLE_Q/MAPBOX_TOKEN or"

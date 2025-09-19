@@ -98,18 +98,51 @@ class LocationImageService {
   return getCategoryImageUrl(category, seed: locationId)['url'] as String;
   }
 
+  /// Async variant of `getLocationImageUrl` which checks the asset bundle
+  /// to ensure a local asset actually exists before returning it. This is
+  /// non-breaking: the synchronous `getLocationImageUrl` remains available
+  /// for callers that don't need an existence guarantee.
+  static Future<String> getLocationImageUrlAsync(String locationId, String category) async {
+    // Prefer verified local asset if present
+    final local = await getCategoryAssetPathAsync(category);
+    if (local != null) return local;
+
+    // Fallback to external URL
+    final entry = getCategoryImageUrl(category, seed: locationId);
+    return entry['url'] ?? '';
+  }
+
   /// Get local asset path for category (returns null if not available)
   static String? getCategoryAssetPath(String category) {
     final normalizedCategory = category.toLowerCase().trim();
     final assetPath = _categoryAssets[normalizedCategory];
     
     if (assetPath != null) {
-  // TODO-2: Check if asset actually exists in the bundle (see docs/INLINE_TODO_ISSUES.md)
-      // For now, assume external URLs until we add actual assets
-      return null;
+      // Note: verifying the asset actually exists at runtime requires an
+      // asynchronous asset bundle check (e.g. `rootBundle.load`). To avoid
+      // changing this synchronous API, callers that need a guaranteed-valid
+      // asset path should use `getCategoryAssetPathAsync(category)` below.
+      // For compatibility, return the configured asset path here (may be
+      // absent in some test/CI environments), callers may prefer the async
+      // check to confirm presence.
+      return assetPath;
     }
     
     return null;
+  }
+
+  /// Async variant that checks the asset bundle to confirm the asset exists.
+  /// Returns the asset path if present, otherwise null.
+  static Future<String?> getCategoryAssetPathAsync(String category) async {
+    final normalizedCategory = category.toLowerCase().trim();
+    final assetPath = _categoryAssets[normalizedCategory];
+    if (assetPath == null) return null;
+    try {
+      await rootBundle.load(assetPath);
+      return assetPath;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Get external URL for category (always available fallback)

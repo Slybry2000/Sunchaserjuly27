@@ -1,3 +1,4 @@
+---
 name: Deploy to Cloud Run (staging)
 
 on:
@@ -39,7 +40,11 @@ jobs:
             --platform managed \
             --region ${GCP_REGION} \
             --allow-unauthenticated \
-            --set-env-vars MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }},CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }},ENABLE_Q=true,TELEMETRY_SINK_URL=${{ secrets.TELEMETRY_SINK_URL }}
+            --set-env-vars \
+              MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }},\
+              CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }},\
+              ENABLE_Q=true,\
+              TELEMETRY_SINK_URL=${{ secrets.TELEMETRY_SINK_URL }}
 
       - name: Smoke test
         run: |

@@ -10,6 +10,7 @@ import sys
 import os
 import pytest
 
+
 def run_local_backend_suite() -> bool:
     """Run local backend checks, returning True/False for manual execution."""
     base_url = "http://127.0.0.1:8000"
@@ -24,7 +25,9 @@ def run_local_backend_suite() -> bool:
         else:
             print(f"❌ FAIL ({response.status_code})")
             return False
-    except requests.exceptions.RequestException as e:  # pragma: no cover - network error path
+    except (
+        requests.exceptions.RequestException
+    ) as e:  # pragma: no cover - network error path
         print(f"❌ FAIL (Connection error: {e})")
         return False
     # Metrics
@@ -32,7 +35,10 @@ def run_local_backend_suite() -> bool:
     try:
         response = requests.get(f"{base_url}/metrics", timeout=5)
         if response.status_code == 200:
-            if "python_info" in response.text or response.headers.get('content-type') == 'application/json':
+            if (
+                "python_info" in response.text
+                or response.headers.get("content-type") == "application/json"
+            ):
                 print("✅ PASS")
             else:
                 print("❌ FAIL (Unexpected content type)")
@@ -113,6 +119,7 @@ def test_local_backend():
         pytest.skip("Skip local backend E2E test (set RUN_E2E=1 to enable)")
     assert run_local_backend_suite(), "Local backend suite reported failure"
 
+
 def run_frontend_integration_suite() -> bool:
     base_url = "http://127.0.0.1:8000"
     print("\n🎨 Testing Frontend Integration")
@@ -151,7 +158,10 @@ def run_frontend_integration_suite() -> bool:
 def test_frontend_integration():
     if os.environ.get("RUN_E2E") != "1":
         pytest.skip("Skip frontend integration E2E test (set RUN_E2E=1 to enable)")
-    assert run_frontend_integration_suite(), "Frontend integration suite reported failure"
+    assert (
+        run_frontend_integration_suite()
+    ), "Frontend integration suite reported failure"
+
 
 def run_external_api_suite() -> bool:
     print("\n🌐 Testing External APIs")
@@ -189,6 +199,7 @@ def test_external_apis():
         pytest.skip("Skip external API E2E test (set RUN_E2E=1 to enable)")
     assert run_external_api_suite(), "External API suite reported failure"
 
+
 def run_performance_suite() -> bool:
     print("\n⚡ Testing Performance")
     print("=" * 40)
@@ -223,36 +234,38 @@ def test_performance():
         pytest.skip("Skip performance E2E test (set RUN_E2E=1 to enable)")
     assert run_performance_suite(), "Performance suite reported failure"
 
+
 def run_comprehensive_tests():
     """Run all test suites"""
     print("🧪 Sun Chaser End-to-End Test Suite")
     print("=" * 50)
-    
+
     results = {
         "local_backend": run_local_backend_suite(),
         "frontend_integration": run_frontend_integration_suite(),
         "external_apis": run_external_api_suite(),
         "performance": run_performance_suite(),
     }
-    
+
     # Summary
     print("\n📊 Test Results Summary")
     print("=" * 30)
     passed = sum(results.values())
     total = len(results)
-    
+
     for test_name, result in results.items():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"{test_name.replace('_', ' ').title()}: {status}")
-    
+
     print(f"\nOverall: {passed}/{total} test suites passed")
-    
+
     if passed == total:
         print("🎉 All systems operational!")
         return True
     else:
         print("⚠️  Some issues detected - check logs above")
         return False
+
 
 if __name__ == "__main__":
     success = run_comprehensive_tests()

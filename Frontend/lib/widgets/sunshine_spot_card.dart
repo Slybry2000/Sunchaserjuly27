@@ -5,6 +5,7 @@ import 'package:sunshine_spotter/services/photo_meta_service.dart';
 import 'package:sunshine_spotter/services/photo_track_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class SunshineSpotCard extends StatefulWidget {
   final SunshineSpot spot;
@@ -65,11 +66,8 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
             _tracked = false; _loggedImage = false;
           }
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          // Ensure the new image gets tracked even in tests where Image
-          // loadingBuilder may not call with loadingProgress==null.
-          _track();
-        });
+  // Track immediately; card is visible already when meta arrives.
+  _track();
         return;
       }
     }
@@ -105,9 +103,8 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
               _loggedImage = false;
             }
           });
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _track();
-          });
+          // Invoke tracking for the updated image immediately.
+          _track();
         } else {
           // Demo fallback: keep original image to avoid 404 placeholders
           setState(() {
@@ -123,28 +120,28 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
 
   Future<void> _track() async {
     if (_tracked) return;
-    _tracked = true;
     try {
-  final trackService = widget.photoTrackService ?? HttpPhotoTrackService();
-  // Track by direct API id when available
-  if ((widget.spot.apiPhotoId ?? '').isNotEmpty) {
-    await trackService.trackPhoto(widget.spot.apiPhotoId!);
-    return;
-  }
-  if (!_currentImageUrl.contains('images.unsplash.com')) return;
-  String? photoId;
-  try {
-    final pool = LocationImageService.getCategoryImagePool(widget.spot.category);
-    final match = pool.firstWhere((e) => (e['url'] ?? '') == _currentImageUrl, orElse: () => <String, String>{});
-    if (match.isNotEmpty && (match['apiId'] ?? '').isNotEmpty) {
-      photoId = match['apiId'];
-    }
-  } catch (_) {}
-  photoId ??= _deriveUnsplashPhotoId(_currentImageUrl);
-  await trackService.trackPhoto(photoId);
+      final trackService = widget.photoTrackService ?? HttpPhotoTrackService();
+      // Track by direct API id when available
+      if ((widget.spot.apiPhotoId ?? '').isNotEmpty) {
+        final ok = await trackService.trackPhoto(widget.spot.apiPhotoId!);
+        if (ok) _tracked = true;
+        return;
+      }
+      if (!_currentImageUrl.contains('images.unsplash.com')) return;
+      String? photoId;
+      try {
+        final pool = LocationImageService.getCategoryImagePool(widget.spot.category);
+        final match = pool.firstWhere((e) => (e['url'] ?? '') == _currentImageUrl, orElse: () => <String, String>{});
+        if (match.isNotEmpty && (match['apiId'] ?? '').isNotEmpty) {
+          photoId = match['apiId'];
+        }
+      } catch (_) {}
+      photoId ??= _deriveUnsplashPhotoId(_currentImageUrl);
+      final ok = await trackService.trackPhoto(photoId);
+      if (ok) _tracked = true;
     } catch (e) {
       debugPrint('track exception: $e');
-      // swallow errors
     }
   }
 
@@ -191,77 +188,84 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image with favorite button overlay
-            SizedBox(
-              height: 180,
-              child: Stack(
-                children: [
-                  // Use Image.network with improved error handling
-                  Positioned.fill(child: _buildResilientImage(spot)),
-                  
-                  // Gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // Favorite button
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
+            // VisibilityDetector wraps the image stack to trigger tracking only when
+            // the card is actually visible (>=40% of its area) to approximate a user view.
+            VisibilityDetector(
+              key: Key('spot-visible-${spot.id}'),
+              onVisibilityChanged: (info) {
+                if (info.visibleFraction >= 0.4) {
+                  _track();
+                }
+              },
+              child: SizedBox(
+                height: 180,
+                child: Stack(
+                  children: [
+                    // Use Image.network with improved error handling
+                    Positioned.fill(child: _buildResilientImage(spot)),
+                    // Gradient overlay
+                    Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: widget.onFavoriteToggle,
-                        icon: Icon(
-                          spot.isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: spot.isFavorite ? Colors.red : Colors.grey[600],
-                          size: 22,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withAlpha((0.3 * 255).round()),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                  
-                  // Weather info overlay
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.wb_sunny,
-                            color: theme.colorScheme.primary,
-                            size: 16,
+                    // Favorite button
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                        child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha((0.9 * 255).round()),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: widget.onFavoriteToggle,
+                          icon: Icon(
+                            spot.isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: spot.isFavorite ? Colors.red : Colors.grey[600],
+                            size: 22,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${spot.temperature.toInt()}°F',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    // Weather info overlay
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha((0.9 * 255).round()),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.wb_sunny,
+                              color: theme.colorScheme.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${spot.temperature.toInt()}°F',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             
@@ -308,7 +312,7 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
                   Text(
                     spot.description,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.8),
+                      color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).round()),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -320,7 +324,7 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
                     // Simple rendering: strip basic HTML and show as tappable link if present
                     RichText(
                       text: TextSpan(
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.8)),
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).round())),
                         children: _buildAttributionSpans(_attributionHtml!, theme),
                       ),
                     ),
@@ -493,8 +497,7 @@ class _SunshineSpotCardState extends State<SunshineSpotCard> {
           _loggedImage = true;
         }
         if (loadingProgress == null) {
-          _track();
-          return child;
+          return child; // tracking occurs via VisibilityDetector
         }
         return Container(
           color: Colors.grey.shade200,

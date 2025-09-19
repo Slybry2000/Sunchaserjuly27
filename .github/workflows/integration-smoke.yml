@@ -1,3 +1,4 @@
+---
 name: Integration smoke
 
 on:
@@ -12,69 +13,74 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ALLOW_TEST_HEADERS: 'true'
-      UNSPLASH_TEST_HEADER_SECRET: ${{ secrets.UNSPLASH_TEST_HEADER_SECRET }}
-      UNSPLASH_CLIENT_ID: ${{ secrets.UNSPLASH_CLIENT_ID }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install deps
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Pre-import app (fail fast on import errors)
-      run: |
-        python - <<'EOF'
-        import sys, importlib
-        try:
-            m = importlib.import_module('Backend.main')
-            assert hasattr(m, 'app'), 'Backend.main.app missing'
-            print('Imported Backend.main successfully.')
-        except Exception as e:
-            print('IMPORT_ERROR:', e)
-            sys.exit(1)
-        EOF
+      - name: Pre-import app (fail fast on import errors)
+        run: |
+          python - <<'PY'
+          import importlib, sys
+          try:
+              m = importlib.import_module('Backend.main')
+              assert hasattr(m, 'app'), 'Backend.main.app missing'
+              print('Imported Backend.main successfully.')
+          except Exception as e:
+              print('IMPORT_ERROR:', e)
+              sys.exit(1)
+          PY
 
-    - name: Start FastAPI server
-      run: |
-        # Start uvicorn in background; logs will show in the job log
-        nohup python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8000 --log-level info &
-        # Give the event loop / lifespan a moment to initialize
-        sleep 4
+      - name: Start FastAPI server
+        run: |
+          # Start uvicorn in background; logs will show in the job log
+          nohup python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8000 --log-level info &
+          # Give the event loop / lifespan a moment to initialize
+          sleep 4
 
-    - name: Wait for server readiness
-      run: |
-        set -e
-        echo "Waiting for FastAPI to become ready (health + meta)..."
-        health_url="http://127.0.0.1:8000/health"
-        meta_url="http://127.0.0.1:8000/internal/photos/meta?photo_id=ci-smoke"
-        ready=0
-        for i in {1..15}; do
-          hstatus=$(curl -s -o /dev/null -w "%{http_code}" "$health_url" || echo "000")
-          mstatus=$(curl -s -o /dev/null -w "%{http_code}" "$meta_url" || echo "000")
+      - name: Wait for server readiness
+        run: |
+          set -e
+          echo "Waiting for FastAPI to become ready (health + meta)..."
+          health_url="http://127.0.0.1:8000/health"
+          meta_url="http://127.0.0.1:8000/internal/photos/meta?photo_id=ci-smoke"
+          ready=0
+          for i in {1..15}; do
+            hstatus=$(curl -s -o /dev/null -w "%{http_code}" "$health_url" || echo "000")
+            mstatus=$(curl -s -o /dev/null -w "%{http_code}" "$meta_url" || echo "000")
             echo "Attempt $i: health=$hstatus meta=$mstatus"
-          if [ "$hstatus" = "200" ] && [ "$mstatus" = "200" ]; then
-            ready=1
-            break
+            if [ "$hstatus" = "200" ] && [ "$mstatus" = "200" ]; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "Server did not become ready in time" >&2
+            echo "--- ps aux | grep uvicorn ---" >&2
+            ps aux | grep uvicorn >&2 || true
+            echo "--- tail nohup.out (if present) ---" >&2
+            [ -f nohup.out ] && tail -n 200 nohup.out >&2 || echo "nohup.out not found" >&2
+            exit 1
           fi
-          sleep 2
-        done
-        if [ "$ready" -ne 1 ]; then
-          echo "Server did not become ready in time" >&2
-          echo "--- ps aux | grep uvicorn ---" >&2
-          ps aux | grep uvicorn >&2 || true
-          echo "--- tail nohup.out (if present) ---" >&2
-          [ -f nohup.out ] && tail -n 200 nohup.out >&2 || echo "nohup.out not found" >&2
-          exit 1
-        fi
 
-    - name: Run integration smoke
-      run: |
-        python Backend/scripts/integration_smoke.py --base-url http://127.0.0.1:8000 --photo-id ci-smoke --mock-trigger --wait
+      - name: Run integration smoke
+        env:
+          UNSPLASH_TEST_HEADER_SECRET: '${{ secrets.UNSPLASH_TEST_HEADER_SECRET }}'
+          UNSPLASH_CLIENT_ID: '${{ secrets.UNSPLASH_CLIENT_ID }}'
+        run: |
+          python Backend/scripts/integration_smoke.py \
+            --base-url http://127.0.0.1:8000 \
+            --photo-id ci-smoke \
+            --mock-trigger \
+            --wait
