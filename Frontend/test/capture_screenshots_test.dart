@@ -1,16 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:convert';
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
-import 'package:flutter/rendering.dart';
-import 'package:sunshine_spotter/widgets/sunshine_spot_card.dart';
-
-import 'package:sunshine_spotter/services/photo_meta_service.dart';
-import 'package:sunshine_spotter/services/photo_track_service.dart';
 
 /// A tiny test asset bundle that returns a valid 1x1 PNG for the
 /// test placeholder asset so `Image.asset` does not attempt network
@@ -37,22 +33,7 @@ class _TestAssetBundle extends CachingAssetBundle {
   Future<String> loadString(String key, {bool cache = true}) async => '';
 }
 
-class _StaticMeta implements PhotoMetaService {
-  @override
-  Future<Map<String, dynamic>?> fetchMeta(String photoId, String category) async {
-    return {
-  'attribution_html': 'Photo by <a href="https://unsplash.com/@user">User</a> on <a href="https://unsplash.com/photos/$photoId">Unsplash</a>',
-  // Use local asset in tests to avoid network image loading in CI/test environment
-  'urls': {'regular': 'assets/placeholder.png'},
-      'source': 'live'
-    };
-  }
-}
-
-class _NoopTrack implements PhotoTrackService {
-  @override
-  Future<bool> trackPhoto(String photoId) async => true;
-}
+// Note: old test-local meta/track stubs removed as they are not referenced.
 
 /// Minimal test-only card that mirrors the key visual structure of the
 /// real `SunshineSpotCard` but uses `Image.memory` so tests don't rely on
@@ -60,7 +41,7 @@ class _NoopTrack implements PhotoTrackService {
 class _TestSpotCard extends StatelessWidget {
   final SunshineSpot spot;
   final String? attributionHtml;
-  const _TestSpotCard({required this.spot, this.attributionHtml, Key? key}): super(key: key);
+  const _TestSpotCard({required this.spot, this.attributionHtml});
 
   List<InlineSpan> _simpleAttributionSpans(String html, ThemeData theme) {
     // Very small parser: extract anchor texts and render underlined spans
@@ -101,7 +82,7 @@ class _TestSpotCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black.withOpacity(0.3)],
+                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.3)],
                     ),
                   ),
                 ),
@@ -269,7 +250,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
-        print('capture: no RenderRepaintBoundary found for $filename; writing placeholder PNG');
+  debugPrint('capture: no RenderRepaintBoundary found for $filename; writing placeholder PNG');
         final file = File('build/screenshots/$filename');
         await file.writeAsBytes(_TestAssetBundle._onePxPng);
         return;
@@ -279,11 +260,11 @@ void main() {
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         Uint8List bytes;
         if (byteData == null || byteData.lengthInBytes == 0) {
-          print('capture: toByteData returned null/empty for $filename; writing placeholder PNG');
+          debugPrint('capture: toByteData returned null/empty for $filename; writing placeholder PNG');
           bytes = _TestAssetBundle._onePxPng;
         } else {
           bytes = byteData.buffer.asUint8List();
-          print('capture: generated ${bytes.length} bytes for $filename');
+          debugPrint('capture: generated ${bytes.length} bytes for $filename');
         }
         final file = File('build/screenshots/$filename');
         await file.writeAsBytes(bytes);
