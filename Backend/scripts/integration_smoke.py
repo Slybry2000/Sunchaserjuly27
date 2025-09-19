@@ -103,7 +103,9 @@ def run(
         if dedupe_ttl and dedupe_ttl > 0:
             import time
 
-            print(f"Waiting {dedupe_ttl + 0.1}s for dedupe TTL to expire and re-testing")
+            print(
+                f"Waiting {dedupe_ttl + 0.1}s for dedupe TTL to expire and re-testing"
+            )
             time.sleep(dedupe_ttl + 0.1)
             try:
                 r3 = requests.post(track_url, json=payload, timeout=5, headers=headers)
@@ -174,5 +176,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     # Run the test with parsed arguments
-    rc = run(args.base_url, args.photo_id, args.wait, args.mock_trigger, args.dedupe_ttl)
+    rc = run(
+        args.base_url, args.photo_id, args.wait, args.mock_trigger, args.dedupe_ttl
+    )
     sys.exit(rc)

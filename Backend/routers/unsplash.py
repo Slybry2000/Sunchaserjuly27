@@ -225,9 +225,7 @@ async def photo_meta(
                 "https://images.unsplash.com/" + photo_id + "?auto=format&fit=crop"
             )
             html_url = "https://unsplash.com/photos/" + photo_id
-            download_url = (
-                "https://api.unsplash.com/photos/" + photo_id + "/download"
-            )
+            download_url = "https://api.unsplash.com/photos/" + photo_id + "/download"
             photo = {
                 "id": photo_id,
                 "urls": {"regular": regular_url},
@@ -270,7 +268,11 @@ async def photo_meta(
         # Log compact debug info (keep message short to satisfy linters)
         debug_log(
             "router_debug: keys=%s source=%s pid=%s"
-            % (list(result.keys()), result.get("source"), os.getpid(),)
+            % (
+                list(result.keys()),
+                result.get("source"),
+                os.getpid(),
+            )
         )
     except Exception:
         pass

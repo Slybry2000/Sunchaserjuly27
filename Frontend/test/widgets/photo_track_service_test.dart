@@ -4,6 +4,7 @@ import 'package:sunshine_spotter/models/sunshine_spot.dart';
 import 'package:sunshine_spotter/services/photo_meta_service.dart';
 import 'package:sunshine_spotter/services/photo_track_service.dart';
 import 'package:sunshine_spotter/widgets/sunshine_spot_card.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class FakeTrackService implements PhotoTrackService {
   final List<String> called = [];
@@ -40,28 +41,33 @@ SunshineSpot _spotWithApi(String? apiId, String image) => SunshineSpot(
 );
 
 void main() {
-  testWidgets('trackPhoto is called when apiPhotoId present', (tester) async {
+  setUpAll(() {
+    VisibilityDetectorController.instance.updateInterval = Duration.zero;
+  });
+  testWidgets('trackPhoto is called when apiPhotoId present (via visibility)', (tester) async {
     final fakeTrack = FakeTrackService();
-  final spot = _spotWithApi('abc', 'https://images.unsplash.com/id-abc');
+    final spot = _spotWithApi('abc', 'https://images.unsplash.com/id-abc');
 
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: SunshineSpotCard(
-          spot: spot,
-          onTap: () {},
-          onFavoriteToggle: () {},
-          photoTrackService: fakeTrack,
+        body: ListView(
+          children: [SizedBox(height: 400, child: SunshineSpotCard(
+            spot: spot,
+            onTap: () {},
+            onFavoriteToggle: () {},
+            photoTrackService: fakeTrack,
+          ))],
         ),
       ),
     ));
 
-    // Allow image loading to call _track via loadingBuilder
-    await tester.pumpAndSettle();
-    // The FakeTrackService should have been called with 'abc'
+    // Initial pump builds widgets and visibility detector registers.
+  await tester.pump(); // build
+  await tester.pump(); // visibility processed immediately
     expect(fakeTrack.called, contains('abc'));
   });
 
-  testWidgets('when meta returns a different urls.regular the image is updated and track is called twice', (tester) async {
+  testWidgets('when meta returns different urls.regular tracking occurs for each visible image', (tester) async {
     final fakeTrack = FakeTrackService();
     final meta = {
       'source': 'live',
@@ -70,7 +76,7 @@ void main() {
     };
     final fakeMeta = FakeMetaServiceWithUrl(meta);
 
-  final spot = _spotWithApi(null, 'https://images.unsplash.com/id-initial');
+    final spot = _spotWithApi(null, 'https://images.unsplash.com/id-initial');
 
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
@@ -84,11 +90,30 @@ void main() {
       ),
     ));
 
-    // Let the meta fetch and potential image update complete
-    await tester.pumpAndSettle();
+    // First frame -> initial visibility triggers first track.
+  await tester.pump(); // build
+  await tester.pump(const Duration(milliseconds: 10)); // async meta completes
+  await tester.pump(); // updated image visibility
+    expect(fakeTrack.called, equals(['id-initial', 'updated-id']));
+  });
 
-  // The track should have been called first for the initial derived id, and
-  // then again for the updated id derived from the meta response.
-  expect(fakeTrack.called, equals(['id-initial', 'updated-id']));
+  testWidgets('visibility only tracks once even after multiple pumps', (tester) async {
+    final fakeTrack = FakeTrackService();
+    final spot = _spotWithApi('once', 'https://images.unsplash.com/once');
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SunshineSpotCard(
+          spot: spot,
+          onTap: () {},
+          onFavoriteToggle: () {},
+          photoTrackService: fakeTrack,
+        ),
+      ),
+    ));
+  await tester.pump();
+  await tester.pump();
+  await tester.pump();
+    expect(fakeTrack.called.where((e) => e == 'once').length, 1);
   });
 }

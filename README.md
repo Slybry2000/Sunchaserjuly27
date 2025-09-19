@@ -9,6 +9,12 @@ A production-ready mobile application and FastAPI backend for discovering outdoo
 
 ## 🎯 Status: September 2025 - Production Ready
 
+> Maintenance Update (2025-09-18)
+>
+> - Local development standardized on Python 3.11. A fresh `.venv` was created with 3.11 and all dependencies reinstalled.
+> - VS Code configured to use the workspace `.venv` and improved analysis settings (Pylance/Pyright + Ruff).
+> - CI integration smoke workflow aligned to Python 3.11 for consistency across environments.
+
 ### ✅ **MAJOR MILESTONE: Full Implementation Complete**
 **🚀 PR #9: 16/16 CI Checks Passing** - All automated testing green  
 **🎯 READY FOR**: Unsplash production API application submission  
@@ -95,15 +101,20 @@ A production-ready mobile application and FastAPI backend for discovering outdoo
 ## 🚀 Quick Start
 
 ### 1. Environment Setup
-```bash
+```powershell
 # Clone and navigate to project
 cd c:\Users\bpiar\Projects\Sunchaserjuly27
 
-# Activate virtual environment 
-.venv\Scripts\activate
+# (Windows) Create virtual environment with Python 3.11
+# Requires Python 3.11 installed (winget install Python.Python.3.11)
+py -3.11 -m venv .venv
+
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 Note: The PNW dataset includes demo rows (ids 101–103) near Seattle for local development and testing.
@@ -126,6 +137,18 @@ uvicorn main:app --reload --port 8001
 
 # Production server
 uvicorn main:app --host 0.0.0.0 --port 8080
+```
+
+### Windows: Recreate venv with Python 3.11 (if needed)
+If your local Problems panel shows false positives or you upgraded Python, recreate the venv:
+
+```powershell
+# Remove old venv and create a new one with Python 3.11
+Remove-Item -Recurse -Force .\.venv
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip setuptools wheel
+pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ### Seed forecast snapshot DB (local)

@@ -49,6 +49,7 @@ def _compute_build_info():
     tag = os.environ.get("GIT_TAG", "")
     return {"commit": sha, "timestamp": ts, "tag": tag}
 
+
 _BUILD_INFO = _compute_build_info()
 
 
@@ -360,7 +361,7 @@ async def version_info():
 )
 @cached(ttl=604800, key_prefix="geocode")  # 7 days TTL
 async def geocode_endpoint(
-    q: str = Query(..., description="Location query (e.g., 'Seattle, WA')")
+    q: str = Query(..., description="Location query (e.g., 'Seattle, WA')"),
 ):
     """
     Geocode a location query to latitude/longitude coordinates using Mapbox API.

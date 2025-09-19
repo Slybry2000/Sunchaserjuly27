@@ -14,9 +14,11 @@ Behavior:
 
 Exit codes: returns pytest exit code, or 124 on timeout.
 """
+
 import subprocess
 import sys
 import time
+
 
 def main():
     args = sys.argv[1:]
@@ -26,9 +28,9 @@ def main():
         args = args[1:]
 
     if not args:
-        args = ['Backend/tests/test_cache_inproc.py', '-q']
+        args = ["Backend/tests/test_cache_inproc.py", "-q"]
 
-    cmd = [sys.executable, '-m', 'pytest'] + args
+    cmd = [sys.executable, "-m", "pytest"] + args
     print(f"Running: {' '.join(cmd)} (timeout={timeout}s)")
 
     # Launch pytest without capturing, so output streams directly to console
@@ -49,7 +51,11 @@ def main():
                 last_heartbeat = elapsed
 
             if elapsed >= timeout:
-                print(f"ERROR: test run timed out after {timeout} seconds", file=sys.stderr, flush=True)
+                print(
+                    f"ERROR: test run timed out after {timeout} seconds",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 # Try graceful terminate first
                 try:
                     proc.terminate()
@@ -80,6 +86,7 @@ def main():
             except Exception:
                 pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     rc = main()
     sys.exit(rc)

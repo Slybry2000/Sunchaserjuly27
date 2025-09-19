@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:network_image_mock/network_image_mock.dart';
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
 import 'package:sunshine_spotter/widgets/sunshine_spot_card.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 void main() {
+  setUpAll(() {
+    VisibilityDetectorController.instance.updateInterval = Duration.zero;
+  });
   testWidgets('renders attribution link and is tappable', (WidgetTester tester) async {
     final spot = SunshineSpot(
       id: 's1',
@@ -27,17 +32,20 @@ void main() {
     // we'll instead emulate that the meta fetch set the HTML by creating a
     // wrapper that uses the same rendering logic.
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SunshineSpotCard(
-          spot: spot,
-          onTap: () {},
-          onFavoriteToggle: () {},
-          initialAttributionHtml: 'Photo by <a href="https://unsplash.com/@photographer">Photographer</a> on <a href="https://unsplash.com">Unsplash</a>',
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SunshineSpotCard(
+            spot: spot,
+            onTap: () {},
+            onFavoriteToggle: () {},
+            initialAttributionHtml: 'Photo by <a href="https://unsplash.com/@photographer">Photographer</a> on <a href="https://unsplash.com">Unsplash</a>',
+          ),
         ),
-      ),
-    ));
-    await tester.pumpAndSettle();
+      ));
+    });
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 120)); // allow visibility + timers
 
     // Verify link text appears inside the RichText (TextSpan). Text spans
     // aren't separate Text widgets so use a RichText predicate.

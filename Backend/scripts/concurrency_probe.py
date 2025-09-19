@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Simple concurrency probe used by CI to assert dedupe under concurrent posts."""
+
 import os
 import sys
 import requests
@@ -7,10 +8,18 @@ import concurrent.futures
 
 
 def main():
-    base = os.environ.get("BASE_URL") or os.environ.get("SMOKE_BASE_URL") or "http://127.0.0.1:8000"
+    base = (
+        os.environ.get("BASE_URL")
+        or os.environ.get("SMOKE_BASE_URL")
+        or "http://127.0.0.1:8000"
+    )
     secret = os.environ.get("UNSPLASH_TEST_HEADER_SECRET", "")
     try:
-        meta = requests.get(base.rstrip("/") + "/internal/photos/meta", params={"photo_id": "ci-concurrency"}, timeout=5)
+        meta = requests.get(
+            base.rstrip("/") + "/internal/photos/meta",
+            params={"photo_id": "ci-concurrency"},
+            timeout=5,
+        )
         meta.raise_for_status()
         meta_json = meta.json()
     except Exception as e:
@@ -27,7 +36,12 @@ def main():
 
     def post():
         try:
-            r = requests.post(base.rstrip("/") + "/internal/photos/track", json=payload, headers=headers, timeout=5)
+            r = requests.post(
+                base.rstrip("/") + "/internal/photos/track",
+                json=payload,
+                headers=headers,
+                timeout=5,
+            )
             try:
                 return r.json()
             except Exception:

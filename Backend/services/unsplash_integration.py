@@ -59,8 +59,7 @@ def trigger_photo_download(
     }
     try:
         debug_log(
-            "trigger_photo_download: url=%s timeout=%s"
-            % (download_location, timeout)
+            "trigger_photo_download: url=%s timeout=%s" % (download_location, timeout)
         )
         resp = requests.get(download_location, headers=headers, timeout=timeout)
 
@@ -138,10 +137,13 @@ def build_attribution_html(photo: Dict) -> str:
     # Simple, accessible HTML attribution. Frontends are free to render this
     # as native widgets instead of raw HTML.
     return (
-        'Photo by <a href="' + user_link + '" rel="nofollow noopener noreferrer" '
+        'Photo by <a href="'
+        + user_link
+        + '" rel="nofollow noopener noreferrer" '
         + 'target="_blank">'
         + user_name
-        + '</a> on <a href="' + photo_link
+        + '</a> on <a href="'
+        + photo_link
         + '" rel="nofollow noopener noreferrer" target="_blank">Unsplash</a>'
     )
 
@@ -196,8 +198,7 @@ def fetch_photo_meta(
             bool(access_key),
         )
         debug_log(
-            "fetch_photo_meta: url=%s photo_id=%s timeout=%s"
-            % (url, photo_id, timeout)
+            "fetch_photo_meta: url=%s photo_id=%s timeout=%s" % (url, photo_id, timeout)
         )
         resp = requests.get(url, headers=headers, timeout=timeout)
 
@@ -215,8 +216,7 @@ def fetch_photo_meta(
                 body[:500],
             )
             debug_log(
-                "fetch_photo_meta: status=%s body=%s"
-                % (resp.status_code, body[:1000])
+                "fetch_photo_meta: status=%s body=%s" % (resp.status_code, body[:1000])
             )
             return None
 

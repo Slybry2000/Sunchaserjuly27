@@ -1,3 +1,4 @@
+---
 name: Integration - Dedupe Matrix
 
 on:
@@ -43,7 +44,11 @@ jobs:
           if [ -z "$BASE" ]; then
             BASE="http://127.0.0.1:8000"
           fi
-          python Backend/scripts/integration_smoke.py --base-url "$BASE" --photo-id "ci-matrix-${{ matrix.dedupe-ttl }}" --mock-trigger --dedupe-ttl ${{ matrix.dedupe-ttl }}
+          python Backend/scripts/integration_smoke.py \
+            --base-url "$BASE" \
+            --photo-id "ci-matrix-${{ matrix.dedupe-ttl }}" \
+            --mock-trigger \
+            --dedupe-ttl ${{ matrix.dedupe-ttl }}
 
   concurrency-check:
     runs-on: ubuntu-latest

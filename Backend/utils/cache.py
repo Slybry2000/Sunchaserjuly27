@@ -35,8 +35,8 @@ def cached(ttl: int = 3600, key_prefix: str = "") -> Callable:
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            cache_key = (
-                f"{key_prefix}:{func.__name__}:" + str(hash(str(args) + str(kwargs)))
+            cache_key = f"{key_prefix}:{func.__name__}:" + str(
+                hash(str(args) + str(kwargs))
             )
 
             # Try cache get

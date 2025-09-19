@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:network_image_mock/network_image_mock.dart';
 import 'package:sunshine_spotter/models/sunshine_spot.dart';
 import 'package:sunshine_spotter/services/photo_meta_service.dart';
 import 'package:sunshine_spotter/widgets/sunshine_spot_card.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class FakePhotoMetaService implements PhotoMetaService {
   final Map<String, Map<String, dynamic>?> responses;
@@ -36,6 +38,9 @@ SunshineSpot _buildSpot({String? apiId, String image = 'https://images.unsplash.
 }
 
 void main() {
+  setUpAll(() {
+    VisibilityDetectorController.instance.updateInterval = Duration.zero;
+  });
   testWidgets('shows attribution when meta source is live', (WidgetTester tester) async {
     final fake = FakePhotoMetaService({
       'abc123': {
@@ -47,19 +52,22 @@ void main() {
 
     final spot = _buildSpot(apiId: 'abc123');
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SunshineSpotCard(
-          spot: spot,
-          onTap: () {},
-          onFavoriteToggle: () {},
-          photoMetaService: fake,
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SunshineSpotCard(
+            spot: spot,
+            onTap: () {},
+            onFavoriteToggle: () {},
+            photoMetaService: fake,
+          ),
         ),
-      ),
-    ));
+      ));
+    });
 
     // Let async fetch complete
-    await tester.pumpAndSettle();
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 200));
 
     final containsPhotographer = find.byWidgetPredicate((w) {
       if (w is RichText) return w.text.toPlainText().contains('Photographer');
@@ -77,18 +85,21 @@ void main() {
 
     final spot = _buildSpot(apiId: 'xyz');
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SunshineSpotCard(
-          spot: spot,
-          onTap: () {},
-          onFavoriteToggle: () {},
-          photoMetaService: fake,
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SunshineSpotCard(
+            spot: spot,
+            onTap: () {},
+            onFavoriteToggle: () {},
+            photoMetaService: fake,
+          ),
         ),
-      ),
-    ));
+      ));
+    });
 
-    await tester.pumpAndSettle();
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 150));
 
     final containsAttribution = find.byType(RichText);
     // There may be other RichText in the card; ensure none contain 'Photo by'

@@ -366,7 +366,9 @@ def test_concurrent_track_calls_dedupe(mock_trigger):
     """Simulate concurrent POSTs for the same download_location and ensure
     deduplication prevents duplicate trigger calls."""
     mock_trigger.return_value = True
-    payload = {"download_location": "https://api.unsplash.com/photos/concurrent/download"}
+    payload = {
+        "download_location": "https://api.unsplash.com/photos/concurrent/download"
+    }
 
     import threading
 

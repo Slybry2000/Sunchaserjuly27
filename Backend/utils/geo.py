@@ -31,9 +31,7 @@ def haversine_miles(lat1, lon1, lat2, lon2) -> float:
 def bbox_degrees(lat, lon, radius_mi) -> tuple[float, float, float, float]:
     # returns (min_lat, min_lon, max_lat, max_lon) approximate box
     dlat = radius_mi / 69.0
-    dlon = radius_mi / (
-        69.172 * max(0.1, math.cos(math.radians(lat)))
-    )
+    dlon = radius_mi / (69.172 * max(0.1, math.cos(math.radians(lat))))
     return lat - dlat, lon - dlon, lat + dlat, lon + dlon
 
 

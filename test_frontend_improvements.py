@@ -12,22 +12,29 @@ print("=" * 50)
 # Test 1: Verify backend API works
 print("\n1. Testing backend API...")
 try:
-    response = requests.get(f"{api_base}/recommend?lat=47.6&lon=-122.3&radius=25", timeout=5)
+    response = requests.get(
+        f"{api_base}/recommend?lat=47.6&lon=-122.3&radius=25", timeout=5
+    )
     if response.status_code == 200:
         data = response.json()
         print(f"✅ API working: {len(data.get('results', []))} locations found")
-        
+
         # Show the location data that frontend will receive
-        for i, result in enumerate(data.get('results', [])[:3]):
-            print(f"   📍 {result['name']} ({result['category']}) - Score: {result['score']}")
-        
+        for i, result in enumerate(data.get("results", [])[:3]):
+            print(
+                f"   📍 {result['name']} ({result['category']}) - Score: {result['score']}"
+            )
+
         # Test ETag caching
-        etag = response.headers.get('ETag')
+        etag = response.headers.get("ETag")
         if etag:
             print(f"✅ ETag present: {etag[:20]}...")
             # Test conditional request
-            resp2 = requests.get(f"{api_base}/recommend?lat=47.6&lon=-122.3&radius=25", 
-                               headers={'If-None-Match': etag}, timeout=5)
+            resp2 = requests.get(
+                f"{api_base}/recommend?lat=47.6&lon=-122.3&radius=25",
+                headers={"If-None-Match": etag},
+                timeout=5,
+            )
             if resp2.status_code == 304:
                 print("✅ ETag caching working (304 Not Modified)")
             else:
@@ -39,16 +46,16 @@ except Exception as e:
 
 # Test 2: Validate our image URL improvements
 print("\n2. Testing image URL strategy...")
-categories = ['Forest', 'Urban Park', 'Beach', 'Mountain', 'Lake']
+categories = ["Forest", "Urban Park", "Beach", "Mountain", "Lake"]
 for category in categories:
     # This simulates what our _getCategoryImage function returns
-    if category.lower() == 'forest':
-        url = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=240&fit=crop&crop=center'
-    elif category.lower() == 'urban park':
-        url = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center'
+    if category.lower() == "forest":
+        url = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=240&fit=crop&crop=center"
+    elif category.lower() == "urban park":
+        url = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=240&fit=crop&crop=center"
     else:
-        url = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center'
-    
+        url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=240&fit=crop&crop=center"
+
     print(f"   📸 {category}: {url[:50]}...")
 
 print("\n3. Summary of improvements:")
@@ -59,4 +66,6 @@ print("✅ Loading indicators for images")
 print("✅ Better error messages")
 
 print("\n🎯 Next: Test the Flutter app to see these improvements in action")
-print("   Run: cd Frontend && flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:8000")
+print(
+    "   Run: cd Frontend && flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:8000"
+)
